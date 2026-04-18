@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Join Resolvo</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,200..800;1,200..800&amp;family=Inter:wght@100..900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-primary-fixed-variant": "#004396",
+                        "surface-bright": "#f7fafc",
+                        "primary": "#0052b5",
+                        "primary-container": "#186ade",
+                        "tertiary": "#005f71",
+                        "outline": "#727785",
+                        "inverse-on-surface": "#eef1f3",
+                        "on-error": "#ffffff",
+                        "surface-container-high": "#e5e9eb",
+                        "on-surface": "#181c1e",
+                        "error": "#ba1a1a",
+                        "surface-container-lowest": "#ffffff",
+                        "secondary-container": "#5cfd80",
+                        "surface-container-highest": "#e0e3e5",
+                        "on-tertiary-fixed": "#001f27",
+                        "tertiary-fixed": "#afecff",
+                        "on-secondary-fixed": "#002108",
+                        "on-background": "#181c1e",
+                        "on-error-container": "#93000a",
+                        "background": "#f7fafc",
+                        "surface-dim": "#d7dadc",
+                        "on-surface-variant": "#424754",
+                        "on-secondary": "#ffffff",
+                        "surface-container-low": "#f1f4f6",
+                        "tertiary-container": "#007990",
+                        "error-container": "#ffdad6",
+                        "surface-variant": "#e0e3e5",
+                        "inverse-surface": "#2d3133",
+                        "secondary": "#006e2a",
+                        "on-primary": "#ffffff",
+                        "on-primary-container": "#f0f2ff",
+                        "outline-variant": "#c2c6d6",
+                        "on-primary-fixed": "#001a42",
+                        "on-tertiary-fixed-variant": "#004e5d",
+                        "surface-container": "#ebeef0",
+                        "primary-fixed": "#d8e2ff",
+                        "secondary-fixed": "#69ff87",
+                        "primary-fixed-dim": "#aec6ff",
+                        "secondary-fixed-dim": "#3ce36a",
+                        "on-secondary-fixed-variant": "#00531e",
+                        "on-secondary-container": "#00732c",
+                        "on-tertiary": "#ffffff",
+                        "surface": "#f7fafc",
+                        "inverse-primary": "#aec6ff",
+                        "on-tertiary-container": "#def7ff",
+                        "surface-tint": "#005ac4",
+                        "tertiary-fixed-dim": "#48d7f9"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.5rem",
+                        "lg": "0.5rem",
+                        "xl": "1.5rem",
+                        "full": "9999px"
+                    },
+                    "fontFamily": {
+                        "headline": ["Plus Jakarta Sans"],
+                        "body": ["Inter"],
+                        "label": ["Inter"]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        body { font-family: 'Inter', sans-serif; background-color: #f7fafc; color: #181c1e; }
+        h1, h2, h3 { font-family: 'Plus Jakarta Sans', sans-serif; }
+        .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+        .glass-panel { background: rgba(255, 255, 255, 0.7); backdrop-filter: blur(20px); }
+        .no-line-card { border: none; }
+        input:focus { outline: none; box-shadow: 0 0 0 2px #d8e2ff; }
+    </style>
+</head>
+<body class="bg-surface selection:bg-primary-fixed selection:text-on-primary-fixed">
+<main class="min-h-screen w-full flex items-center justify-center p-6 md:p-12">
+<div class="max-w-6xl w-full grid grid-cols-1 md:grid-cols-12 gap-0 overflow-hidden rounded-xl shadow-[0_8px_24px_rgba(24,28,30,0.06)] bg-surface-container-lowest">
+<!-- Left Branding Side -->
+<div class="hidden md:flex md:col-span-5 bg-primary relative flex-col justify-between p-12 overflow-hidden">
+<!-- Decorative background elements -->
+<div class="absolute top-0 right-0 w-full h-full opacity-20 pointer-events-none">
+<div class="absolute -top-24 -right-24 w-96 h-96 rounded-full bg-primary-container blur-3xl"></div>
+<div class="absolute bottom-10 left-10 w-64 h-64 rounded-full bg-secondary-fixed-dim blur-3xl"></div>
+</div>
+<div class="relative z-10">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 bg-white rounded-lg flex items-center justify-center">
+<span class="material-symbols-outlined text-primary font-bold" data-weight="fill">water_drop</span>
+</div>
+<span class="text-2xl font-bold tracking-tight text-white headline">Resolvo</span>
+</div>
+<div class="mt-20">
+<h1 class="text-4xl lg:text-5xl font-extrabold text-white leading-tight">Flow into a new era of productivity.</h1>
+<p class="mt-6 text-primary-fixed-dim text-lg leading-relaxed max-w-sm">Experience the "Lucid Flow"—where clarity meets performance in a meticulously designed workspace.</p>
+</div>
+</div>
+<div class="relative z-10">
+<div class="flex -space-x-3 mb-4">
+<img alt="User" class="w-10 h-10 rounded-full border-2 border-primary" data-alt="professional portrait of a creative director with glasses smiling softly in a brightly lit studio" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBMJryEL7PHtWeCvq9YYu630-VsIRgcsRnkj2j9hFCxbGqwQwXzRbZsGV76xpNY8z6J5Y25DPfyYFcaq2UcmuFRqvoPyOGt-awu8ftlvj6pUjYCbcQ0iB_xqF5tg67G91tC4RUl36hQDxy8l6yYkzjTF6HRL9kBFIh7Iqpy_2pFaflRf-aDEGF4mgYlzEm_JBuyC8tb12Yzav5KjTpiQ9P9enGJcwMWif_oPV7tzr7emMte2zLkiN89oBTsUNB8DIixY0VKz7htY0U"/>
+<img alt="User" class="w-10 h-10 rounded-full border-2 border-primary" data-alt="close up of a software engineer looking focused at a monitor with soft blue lighting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCqPh681S-HU9-XsVKG2iwKaP1cI7Rqxp1mkzsHj0YuEfHjhI8K2SIVNGN9RwEBErNUS30GPTFn2Ss2jU4sbTRYkLjPdE0TOw-g6-2hczP9XbYIj6H0wU9hvS4aacGkupRRLCXAEaBIq6JCbfJlcdtzBJZKghYkdloSiBtzumG5-klm7-5inGbwo16WvWeokisqoqswyBKG87OTmYqfXlLxYbLdZupwZwiDGTJSe892AlmpzTiDS3uQwEMCUDA4Ba1ypYujfh7UtH4"/>
+<img alt="User" class="w-10 h-10 rounded-full border-2 border-primary" data-alt="vibrant portrait of a young product designer with colorful urban background in soft focus" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDaPTufG-qs5JWX3krppBKbV52MMeWRabVUM0vUpqIkWacKVwpGdpEpPBed_6yyN8amqaudR94GbUXO4QZTPphI2NRGwcwrgORdzHu5gWwr8N0qsDPGoBfWvcE4IqAzdlfAqPaJxdPblK-JYZIdIfG-Vl6AmJCnz0kuAWTjJU0zvWlib0TkU4InkkqXNOfjRL5I8c3pYac4RVxhu8abgqIRRURUlkAqlKOMJ1mSlVVavbzx9I33h0VyyAamF8Ib2xl-3SsYR5iogYQ"/>
+</div>
+<p class="text-on-primary-container text-sm font-medium">Join 2,400+ flow-seekers today.</p>
+</div>
+<!-- Abstract shape -->
+<div class="absolute -bottom-20 -right-20 w-80 h-80 opacity-40">
+<svg class="text-primary-container fill-current" viewbox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+<path d="M44.7,-76.4C58.3,-69.2,70,-58.1,78.8,-44.7C87.6,-31.3,93.4,-15.7,92.5,-0.5C91.6,14.6,83.9,29.3,74.5,42.9C65.1,56.5,53.9,69.1,40.1,76.5C26.4,83.9,10.2,86.2,-5.1,84.9C-20.4,83.7,-34.9,78.9,-48.1,71.2C-61.3,63.5,-73.2,52.8,-80.6,39.6C-88,26.4,-91,10.7,-88.9,-4.3C-86.8,-19.3,-79.6,-33.5,-69.6,-45.3C-59.5,-57.1,-46.7,-66.4,-33.6,-73.9C-20.5,-81.4,-7.1,-87.1,7.2,-88.3C21.4,-89.6,31.2,-83.6,44.7,-76.4Z" transform="translate(100 100)"></path>
+</svg>
+</div>
+</div>
+<!-- Right Form Side -->
+<div class="md:col-span-7 p-8 md:p-16 flex flex-col justify-center bg-surface-container-lowest">
+<div class="max-w-md mx-auto w-full">
+<div class="mb-10">
+<h2 class="text-3xl font-extrabold text-on-surface tracking-tight mb-2">Create your account</h2>
+<p class="text-on-surface-variant">Start your 14-day free trial. No credit card required.</p>
+</div>
+<form class="space-y-6">
+<!-- Full Name -->
+<div class="space-y-2">
+<label class="block text-sm font-semibold text-on-surface-variant label" for="full-name">Full Name</label>
+<div class="relative group">
+<span class="absolute left-4 top-1/2 -translate-y-1/2 material-symbols-outlined text-outline group-focus-within:text-primary transition-colors">person</span>
+<input class="w-full pl-12 pr-4 py-3 bg-surface-container-low border-none rounded-lg text-on-surface placeholder:text-outline transition-all focus:bg-surface-container-lowest focus:ring-2 focus:ring-primary-fixed" id="full-name" name="full_name" placeholder="John Doe" type="text"/>
+</div>
+</div>
+<!-- Email -->
+<div class="space-y-2">
+<label class="block text-sm font-semibold text-on-surface-variant label" for="email">Email Address</label>
+<div class="relative group">
+<span class="absolute left-4 top-1/2 -translate-y-1/2 material-symbols-outlined text-outline group-focus-within:text-primary transition-colors">mail</span>
+<input class="w-full pl-12 pr-4 py-3 bg-surface-container-low border-none rounded-lg text-on-surface placeholder:text-outline transition-all focus:bg-surface-container-lowest focus:ring-2 focus:ring-primary-fixed" id="email" name="email" placeholder="name@company.com" type="email"/>
+</div>
+</div>
+<!-- Password -->
+<div class="space-y-2">
+<label class="block text-sm font-semibold text-on-surface-variant label" for="password">Password</label>
+<div class="relative group">
+<span class="absolute left-4 top-1/2 -translate-y-1/2 material-symbols-outlined text-outline group-focus-within:text-primary transition-colors">lock</span>
+<input class="w-full pl-12 pr-12 py-3 bg-surface-container-low border-none rounded-lg text-on-surface placeholder:text-outline transition-all focus:bg-surface-container-lowest focus:ring-2 focus:ring-primary-fixed" id="password" name="password" placeholder="••••••••" type="password"/>
+<button class="absolute right-4 top-1/2 -translate-y-1/2 text-outline hover:text-on-surface-variant" type="button">
+<span class="material-symbols-outlined">visibility</span>
+</button>
+</div>
+<p class="text-[11px] text-on-surface-variant mt-1 px-1">Must be at least 8 characters with a mix of letters and numbers.</p>
+</div>
+<!-- Terms -->
+<div class="flex items-start gap-3 py-2">
+<div class="flex items-center h-5">
+<input class="w-4 h-4 text-primary border-outline-variant rounded focus:ring-primary-fixed bg-surface-container-low" id="terms" type="checkbox"/>
+</div>
+<label class="text-sm text-on-surface-variant leading-tight" for="terms">
+                                I agree to the <a class="text-primary font-semibold hover:underline" href="#">Terms and Conditions</a> and <a class="text-primary font-semibold hover:underline" href="#">Privacy Policy</a>.
+                            </label>
+</div>
+<!-- Submit -->
+<button class="w-full py-4 px-6 bg-primary text-white font-bold rounded-lg hover:bg-primary-container active:scale-[0.98] transition-all flex items-center justify-center gap-2 group" type="submit">
+                            Create Account
+                            <span class="material-symbols-outlined group-hover:translate-x-1 transition-transform">arrow_forward</span>
+</button><div class="relative flex items-center justify-center py-4">
+<div class="w-full h-px bg-surface-container-high"></div>
+<span class="absolute px-4 bg-surface-container-lowest text-xs font-semibold text-outline uppercase tracking-widest">Or sign up with</span>
+</div>
+<div class="grid grid-cols-2 gap-4">
+<button class="flex items-center justify-center gap-2 py-2.5 px-4 bg-surface-container-low rounded-lg hover:bg-surface-container-high transition-colors font-medium text-on-surface text-sm" type="button">
+<img alt="Google" class="w-4 h-4" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCl8IVUihj3jsX1ikgwCw3T3OMsqJML3-lSZTm_FO8L-s0L1Qzla525qccD7FKfT-9SNufFXetNaOmAIPkkK10tubc14rMnv3_6P63WjDTrK_Iocl_HJXffEU7-KuSW1mK83TaC0PzR6ENljGDzW6hFfpjWpYlTrb6_XfhkPCnjdmNGpDEWBraKdWcA6bxGBp6zfbXeEwRlx-meFXMZEESwhD_7kNtZNDTRuQE4-drvXFJKSC4v3K4GP_fHvO4uRqe3HPdX7JW1uQk"/>
+                                Google
+                            </button>
+<button class="flex items-center justify-center gap-2 py-2.5 px-4 bg-surface-container-low rounded-lg hover:bg-surface-container-high transition-colors font-medium text-on-surface text-sm" type="button">
+<img alt="GitHub" class="w-4 h-4" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDxd-TstDOJqk2bK7_dUkvxGIFHKLqZftoX0gU_M-uq3Vxhel7-mIdAnxqa97qLQw0fT9Zxj0xoj3Dq-wYFuaz9svfoyMVYj2ru4aPFvITuMFNG49u7SKOIM79DMu7ty650EhFfu7y3yY9IFWoFtKniUBawO76IqOYGAnkQzFaaB9ysyOFhFWOS-jC7kLOV8iOp6flpvzMOk_HDkP15g96i8y5rAgzz6RSt9SoM_upfVuwCupU12vM-t3bz5WzqtSXYrS3GFbOCrB8"/>
+                                GitHub
+                            </button>
+</div>
+<div class="relative flex items-center justify-center py-4">
+<div class="w-full h-px bg-surface-container-high"></div>
+<span class="absolute px-4 bg-surface-container-lowest text-xs font-semibold text-outline uppercase tracking-widest">Or sign up with</span>
+</div>
+<div class="grid grid-cols-2 gap-4">
+<button class="flex items-center justify-center gap-2 py-2.5 px-4 bg-surface-container-low rounded-lg hover:bg-surface-container-high transition-colors font-medium text-on-surface text-sm" type="button">
+<img alt="Google" class="w-4 h-4" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCl8IVUihj3jsX1ikgwCw3T3OMsqJML3-lSZTm_FO8L-s0L1Qzla525qccD7FKfT-9SNufFXetNaOmAIPkkK10tubc14rMnv3_6P63WjDTrK_Iocl_HJXffEU7-KuSW1mK83TaC0PzR6ENljGDzW6hFfpjWpYlTrb6_XfhkPCnjdmNGpDEWBraKdWcA6bxGBp6zfbXeEwRlx-meFXMZEESwhD_7kNtZNDTRuQE4-drvXFJKSC4v3K4GP_fHvO4uRqe3HPdX7JW1uQk"/>
+                                Google
+                            </button>
+<button class="flex items-center justify-center gap-2 py-2.5 px-4 bg-surface-container-low rounded-lg hover:bg-surface-container-high transition-colors font-medium text-on-surface text-sm" type="button">
+<img alt="GitHub" class="w-4 h-4" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDxd-TstDOJqk2bK7_dUkvxGIFHKLqZftoX0gU_M-uq3Vxhel7-mIdAnxqa97qLQw0fT9Zxj0xoj3Dq-wYFuaz9svfoyMVYj2ru4aPFvITuMFNG49u7SKOIM79DMu7ty650EhFfu7y3yY9IFWoFtKniUBawO76IqOYGAnkQzFaaB9ysyOFhFWOS-jC7kLOV8iOp6flpvzMOk_HDkP15g96i8y5rAgzz6RSt9SoM_upfVuwCupU12vM-t3bz5WzqtSXYrS3GFbOCrB8"/>
+                                GitHub
+                            </button>
+</div>
+</form>
+<div class="mt-10 text-center">
+<p class="text-on-surface-variant text-sm">
+                            Already have an account? 
+                            <a class="text-primary font-bold hover:underline ml-1" href="#">Sign In</a>
+</p>
+</div>
+</div>
+</div>
+</div>
+</main>
+<!-- Suppressed Nav Shell for Transactional Focus -->
+<!-- Branding Footnote -->
+<div class="fixed bottom-6 w-full text-center pointer-events-none opacity-50">
+<p class="text-xs font-medium text-on-surface-variant Inter tracking-tight">© 2024 Resolvo Inc. All rights reserved.</p>
+</div>
+</body></html>
