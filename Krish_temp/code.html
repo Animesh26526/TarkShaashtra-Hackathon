@@ -1,11 +1,11 @@
 <!DOCTYPE html>
 
-<html class="light" lang="en"><head>
+<html lang="en"><head>
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-<title>Join Resolvo</title>
+<title>Login | Resolvo</title>
 <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
-<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,200..800;1,200..800&amp;family=Inter:wght@100..900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&amp;family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
 <script id="tailwind-config">
@@ -63,9 +63,9 @@
                         "tertiary-fixed-dim": "#48d7f9"
                     },
                     "borderRadius": {
-                        "DEFAULT": "0.5rem",
+                        "DEFAULT": "0.25rem",
                         "lg": "0.5rem",
-                        "xl": "1.5rem",
+                        "xl": "0.75rem",
                         "full": "9999px"
                     },
                     "fontFamily": {
@@ -73,147 +73,133 @@
                         "body": ["Inter"],
                         "label": ["Inter"]
                     }
-                }
+                },
             }
         }
     </script>
 <style>
-        body { font-family: 'Inter', sans-serif; background-color: #f7fafc; color: #181c1e; }
-        h1, h2, h3 { font-family: 'Plus Jakarta Sans', sans-serif; }
-        .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
-        .glass-panel { background: rgba(255, 255, 255, 0.7); backdrop-filter: blur(20px); }
-        .no-line-card { border: none; }
-        input:focus { outline: none; box-shadow: 0 0 0 2px #d8e2ff; }
+        body { font-family: 'Inter', sans-serif; }
+        h1, h2, h3, .headline { font-family: 'Plus Jakarta Sans', sans-serif; }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
     </style>
 </head>
-<body class="bg-surface selection:bg-primary-fixed selection:text-on-primary-fixed">
-<main class="min-h-screen w-full flex items-center justify-center p-6 md:p-12">
-<div class="max-w-6xl w-full grid grid-cols-1 md:grid-cols-12 gap-0 overflow-hidden rounded-xl shadow-[0_8px_24px_rgba(24,28,30,0.06)] bg-surface-container-lowest">
-<!-- Left Branding Side -->
-<div class="hidden md:flex md:col-span-5 bg-primary relative flex-col justify-between p-12 overflow-hidden">
-<!-- Decorative background elements -->
-<div class="absolute top-0 right-0 w-full h-full opacity-20 pointer-events-none">
-<div class="absolute -top-24 -right-24 w-96 h-96 rounded-full bg-primary-container blur-3xl"></div>
-<div class="absolute bottom-10 left-10 w-64 h-64 rounded-full bg-secondary-fixed-dim blur-3xl"></div>
+<body class="bg-surface-container-lowest text-on-surface min-h-screen flex items-center justify-center p-0 md:p-6 overflow-hidden">
+<!-- Auth Shell Suppression Logic applied: Nav hidden for transactional focus -->
+<main class="w-full max-w-7xl h-full md:h-[921px] flex flex-col md:flex-row bg-surface-container-lowest overflow-hidden">
+<!-- Left Column: High-Impact Visual Canvas (Asymmetric Layout) -->
+<section class="hidden md:flex w-1/2 relative p-12 flex-col justify-between overflow-hidden rounded-xl bg-surface-container-low">
+<div class="absolute inset-0 z-0">
+<img alt="" class="w-full h-full object-cover opacity-80 mix-blend-multiply" data-alt="Abstract smooth flowing liquid gradient in deep sapphire blue and soft teal with a grainy sophisticated texture and clean studio lighting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDh-wgxGz99MQs1dlQlp7VznhyeTE5mSmJ54a4Xi7Zb3CzAl1uEVyPVtnQ-4PtCCMbl0YWy4oWF9FldI5sdNhqh-mEe77SR5UeDNvLrlLJENKsusSKCfoL6CZeLjAPnYrN1EJ07oX_HDX8uW7kXsERrGwFVcGNikXqSKcdrNGlj28dvfcJDG6w7EDcusYoUSwcBtJf8cej5DQZ1XECofN0XxZMt5Vo2Q70jy_zZnHFsKZDsRz6UcHWpgBqENThZqmiBsNaUN34W9QU"/>
+<div class="absolute inset-0 bg-gradient-to-tr from-primary to-transparent opacity-40"></div>
 </div>
+<!-- Branding -->
 <div class="relative z-10">
 <div class="flex items-center gap-3">
-<div class="w-10 h-10 bg-white rounded-lg flex items-center justify-center">
-<span class="material-symbols-outlined text-primary font-bold" data-weight="fill">water_drop</span>
+<div class="w-10 h-10 bg-primary rounded-lg flex items-center justify-center shadow-lg">
+<span class="material-symbols-outlined text-on-primary" style="font-variation-settings: 'FILL' 1;">fluid</span>
 </div>
-<span class="text-2xl font-bold tracking-tight text-white headline">Resolvo</span>
-</div>
-<div class="mt-20">
-<h1 class="text-4xl lg:text-5xl font-extrabold text-white leading-tight">Flow into a new era of productivity.</h1>
-<p class="mt-6 text-primary-fixed-dim text-lg leading-relaxed max-w-sm">Experience the "Lucid Flow"—where clarity meets performance in a meticulously designed workspace.</p>
+<span class="text-2xl font-bold tracking-tight text-on-surface">Resolvo</span>
 </div>
 </div>
-<div class="relative z-10">
-<div class="flex -space-x-3 mb-4">
-<img alt="User" class="w-10 h-10 rounded-full border-2 border-primary" data-alt="professional portrait of a creative director with glasses smiling softly in a brightly lit studio" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBMJryEL7PHtWeCvq9YYu630-VsIRgcsRnkj2j9hFCxbGqwQwXzRbZsGV76xpNY8z6J5Y25DPfyYFcaq2UcmuFRqvoPyOGt-awu8ftlvj6pUjYCbcQ0iB_xqF5tg67G91tC4RUl36hQDxy8l6yYkzjTF6HRL9kBFIh7Iqpy_2pFaflRf-aDEGF4mgYlzEm_JBuyC8tb12Yzav5KjTpiQ9P9enGJcwMWif_oPV7tzr7emMte2zLkiN89oBTsUNB8DIixY0VKz7htY0U"/>
-<img alt="User" class="w-10 h-10 rounded-full border-2 border-primary" data-alt="close up of a software engineer looking focused at a monitor with soft blue lighting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCqPh681S-HU9-XsVKG2iwKaP1cI7Rqxp1mkzsHj0YuEfHjhI8K2SIVNGN9RwEBErNUS30GPTFn2Ss2jU4sbTRYkLjPdE0TOw-g6-2hczP9XbYIj6H0wU9hvS4aacGkupRRLCXAEaBIq6JCbfJlcdtzBJZKghYkdloSiBtzumG5-klm7-5inGbwo16WvWeokisqoqswyBKG87OTmYqfXlLxYbLdZupwZwiDGTJSe892AlmpzTiDS3uQwEMCUDA4Ba1ypYujfh7UtH4"/>
-<img alt="User" class="w-10 h-10 rounded-full border-2 border-primary" data-alt="vibrant portrait of a young product designer with colorful urban background in soft focus" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDaPTufG-qs5JWX3krppBKbV52MMeWRabVUM0vUpqIkWacKVwpGdpEpPBed_6yyN8amqaudR94GbUXO4QZTPphI2NRGwcwrgORdzHu5gWwr8N0qsDPGoBfWvcE4IqAzdlfAqPaJxdPblK-JYZIdIfG-Vl6AmJCnz0kuAWTjJU0zvWlib0TkU4InkkqXNOfjRL5I8c3pYac4RVxhu8abgqIRRURUlkAqlKOMJ1mSlVVavbzx9I33h0VyyAamF8Ib2xl-3SsYR5iogYQ"/>
+<!-- Value Prop Content -->
+<div class="relative z-10 max-w-md">
+<div class="inline-flex items-center px-3 py-1 bg-secondary-fixed text-on-secondary-fixed text-xs font-bold rounded-full mb-6 tracking-wide uppercase">
+                    New Era of Productivity
+                </div>
+<h1 class="text-5xl font-extrabold text-on-surface leading-tight tracking-tight mb-6">
+                    Achieve clarity in your <span class="text-primary">workflow.</span>
+</h1>
+<p class="text-lg text-on-surface-variant font-medium leading-relaxed">Join over 25,000 teams orchestrating their daily operations with the precision of Resolvo.</p>
 </div>
-<p class="text-on-primary-container text-sm font-medium">Join 2,400+ flow-seekers today.</p>
+<!-- Testimonial / Social Proof (Glassmorphism) -->
+<div class="relative z-10 bg-surface-container-lowest/40 backdrop-blur-xl p-6 rounded-xl border border-outline-variant/10 shadow-sm max-w-sm">
+<div class="flex items-center gap-4 mb-4">
+<img alt="" class="w-12 h-12 rounded-full object-cover border-2 border-surface-container-lowest" data-alt="Professional portrait of a woman smiling in a bright creative studio space with soft natural lighting and neutral background" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBO4_0LXHtmm5bGgms9SyWITqIs0yRelsqlIywIFkLoJWcuczfXyIPBX0D8pwevc9J286-M7271U_7c565jW0pJrf6WkVUwLyvqFVNUJF9Et0zhqaPBWpNFCK26RRemw3Mos4gZcUyrHhpNH02yirjeKYX_M-CrWRUaRS5q_abziUHQWefthdgk28Ymn52Gfy9dcwWBiCIvnQLOzi9RB_XjqySx8KocVgpRw5ALS7RYVMUU1Yx6Bphx0_YMP-rMXK82nRW7DPppe8A"/>
+<div>
+<p class="text-sm font-bold text-on-surface">Sarah Chen</p>
+<p class="text-xs text-on-surface-variant">Head of Design, Innovate Corp</p>
 </div>
-<!-- Abstract shape -->
-<div class="absolute -bottom-20 -right-20 w-80 h-80 opacity-40">
-<svg class="text-primary-container fill-current" viewbox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
-<path d="M44.7,-76.4C58.3,-69.2,70,-58.1,78.8,-44.7C87.6,-31.3,93.4,-15.7,92.5,-0.5C91.6,14.6,83.9,29.3,74.5,42.9C65.1,56.5,53.9,69.1,40.1,76.5C26.4,83.9,10.2,86.2,-5.1,84.9C-20.4,83.7,-34.9,78.9,-48.1,71.2C-61.3,63.5,-73.2,52.8,-80.6,39.6C-88,26.4,-91,10.7,-88.9,-4.3C-86.8,-19.3,-79.6,-33.5,-69.6,-45.3C-59.5,-57.1,-46.7,-66.4,-33.6,-73.9C-20.5,-81.4,-7.1,-87.1,7.2,-88.3C21.4,-89.6,31.2,-83.6,44.7,-76.4Z" transform="translate(100 100)"></path>
-</svg>
 </div>
+<p class="text-on-surface text-sm italic leading-relaxed">"The most breathable interface I've ever used. Resolvo didn't just organize our tasks, it cleared our mental clutter."</p>
 </div>
-<!-- Right Form Side -->
-<div class="md:col-span-7 p-8 md:p-16 flex flex-col justify-center bg-surface-container-lowest">
-<div class="max-w-md mx-auto w-full">
-<div class="mb-10">
-<h2 class="text-3xl font-extrabold text-on-surface tracking-tight mb-2">Create your account</h2>
-<p class="text-on-surface-variant">Start your 14-day free trial. No credit card required.</p>
+</section>
+<!-- Right Column: Login Form Canvas (Clean Focus) -->
+<section class="flex-1 flex flex-col justify-center px-8 py-12 md:px-20 lg:px-32 bg-surface-container-lowest">
+<!-- Mobile Branding -->
+<div class="flex md:hidden items-center gap-2 mb-12">
+<div class="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
+<span class="material-symbols-outlined text-on-primary text-sm" style="font-variation-settings: 'FILL' 1;">fluid</span>
 </div>
+<span class="text-xl font-bold tracking-tight text-on-surface">Resolvo</span>
+</div>
+<div class="max-w-md w-full mx-auto">
+<header class="mb-10">
+<h2 class="text-3xl font-bold text-on-surface tracking-tight mb-3">Welcome back</h2>
+<p class="text-on-surface-variant text-sm font-medium">Please enter your details to sign in.</p>
+</header>
 <form class="space-y-6">
-<!-- Full Name -->
+<!-- Email Field -->
 <div class="space-y-2">
-<label class="block text-sm font-semibold text-on-surface-variant label" for="full-name">Full Name</label>
+<label class="block text-sm font-semibold text-on-surface-variant ml-1" for="email">Email address</label>
 <div class="relative group">
-<span class="absolute left-4 top-1/2 -translate-y-1/2 material-symbols-outlined text-outline group-focus-within:text-primary transition-colors">person</span>
-<input class="w-full pl-12 pr-4 py-3 bg-surface-container-low border-none rounded-lg text-on-surface placeholder:text-outline transition-all focus:bg-surface-container-lowest focus:ring-2 focus:ring-primary-fixed" id="full-name" name="full_name" placeholder="John Doe" type="text"/>
+<div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+<span class="material-symbols-outlined text-outline text-[20px] group-focus-within:text-primary transition-colors">alternate_email</span>
+</div>
+<input class="block w-full pl-11 pr-4 py-3.5 bg-surface-container-low border-transparent border-b-2 border-b-outline-variant/10 focus:border-b-primary focus:ring-0 rounded-xl text-on-surface placeholder:text-outline transition-all duration-200 font-medium" id="email" name="email" placeholder="name@company.com" required="" type="email"/>
 </div>
 </div>
-<!-- Email -->
+<!-- Password Field -->
 <div class="space-y-2">
-<label class="block text-sm font-semibold text-on-surface-variant label" for="email">Email Address</label>
-<div class="relative group">
-<span class="absolute left-4 top-1/2 -translate-y-1/2 material-symbols-outlined text-outline group-focus-within:text-primary transition-colors">mail</span>
-<input class="w-full pl-12 pr-4 py-3 bg-surface-container-low border-none rounded-lg text-on-surface placeholder:text-outline transition-all focus:bg-surface-container-lowest focus:ring-2 focus:ring-primary-fixed" id="email" name="email" placeholder="name@company.com" type="email"/>
+<div class="flex justify-between items-center px-1">
+<label class="text-sm font-semibold text-on-surface-variant" for="password">Password</label>
+<a class="text-xs font-bold text-primary hover:text-primary-container transition-colors tracking-wide" href="#">Forgot password?</a>
 </div>
-</div>
-<!-- Password -->
-<div class="space-y-2">
-<label class="block text-sm font-semibold text-on-surface-variant label" for="password">Password</label>
 <div class="relative group">
-<span class="absolute left-4 top-1/2 -translate-y-1/2 material-symbols-outlined text-outline group-focus-within:text-primary transition-colors">lock</span>
-<input class="w-full pl-12 pr-12 py-3 bg-surface-container-low border-none rounded-lg text-on-surface placeholder:text-outline transition-all focus:bg-surface-container-lowest focus:ring-2 focus:ring-primary-fixed" id="password" name="password" placeholder="••••••••" type="password"/>
-<button class="absolute right-4 top-1/2 -translate-y-1/2 text-outline hover:text-on-surface-variant" type="button">
-<span class="material-symbols-outlined">visibility</span>
+<div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+<span class="material-symbols-outlined text-outline text-[20px] group-focus-within:text-primary transition-colors">lock</span>
+</div>
+<input class="block w-full pl-11 pr-12 py-3.5 bg-surface-container-low border-transparent border-b-2 border-b-outline-variant/10 focus:border-b-primary focus:ring-0 rounded-xl text-on-surface placeholder:text-outline transition-all duration-200 font-medium" id="password" name="password" placeholder="••••••••" required="" type="password"/>
+<button class="absolute inset-y-0 right-0 pr-4 flex items-center text-outline hover:text-on-surface transition-colors" type="button">
+<span class="material-symbols-outlined text-[20px]">visibility</span>
 </button>
 </div>
-<p class="text-[11px] text-on-surface-variant mt-1 px-1">Must be at least 8 characters with a mix of letters and numbers.</p>
 </div>
-<!-- Terms -->
-<div class="flex items-start gap-3 py-2">
-<div class="flex items-center h-5">
-<input class="w-4 h-4 text-primary border-outline-variant rounded focus:ring-primary-fixed bg-surface-container-low" id="terms" type="checkbox"/>
+<!-- Remember Me (Ghost Checkbox) -->
+<div class="flex items-center gap-2 px-1">
+<input class="w-5 h-5 rounded border-outline-variant/30 text-primary focus:ring-primary/20 bg-surface-container-low transition-all" id="remember" type="checkbox"/>
+<label class="text-sm font-medium text-on-surface-variant select-none" for="remember">Remember for 30 days</label>
 </div>
-<label class="text-sm text-on-surface-variant leading-tight" for="terms">
-                                I agree to the <a class="text-primary font-semibold hover:underline" href="#">Terms and Conditions</a> and <a class="text-primary font-semibold hover:underline" href="#">Privacy Policy</a>.
-                            </label>
-</div>
-<!-- Submit -->
-<button class="w-full py-4 px-6 bg-primary text-white font-bold rounded-lg hover:bg-primary-container active:scale-[0.98] transition-all flex items-center justify-center gap-2 group" type="submit">
-                            Create Account
-                            <span class="material-symbols-outlined group-hover:translate-x-1 transition-transform">arrow_forward</span>
-</button><div class="relative flex items-center justify-center py-4">
-<div class="w-full h-px bg-surface-container-high"></div>
-<span class="absolute px-4 bg-surface-container-lowest text-xs font-semibold text-outline uppercase tracking-widest">Or sign up with</span>
-</div>
-<div class="grid grid-cols-2 gap-4">
-<button class="flex items-center justify-center gap-2 py-2.5 px-4 bg-surface-container-low rounded-lg hover:bg-surface-container-high transition-colors font-medium text-on-surface text-sm" type="button">
-<img alt="Google" class="w-4 h-4" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCl8IVUihj3jsX1ikgwCw3T3OMsqJML3-lSZTm_FO8L-s0L1Qzla525qccD7FKfT-9SNufFXetNaOmAIPkkK10tubc14rMnv3_6P63WjDTrK_Iocl_HJXffEU7-KuSW1mK83TaC0PzR6ENljGDzW6hFfpjWpYlTrb6_XfhkPCnjdmNGpDEWBraKdWcA6bxGBp6zfbXeEwRlx-meFXMZEESwhD_7kNtZNDTRuQE4-drvXFJKSC4v3K4GP_fHvO4uRqe3HPdX7JW1uQk"/>
-                                Google
-                            </button>
-<button class="flex items-center justify-center gap-2 py-2.5 px-4 bg-surface-container-low rounded-lg hover:bg-surface-container-high transition-colors font-medium text-on-surface text-sm" type="button">
-<img alt="GitHub" class="w-4 h-4" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDxd-TstDOJqk2bK7_dUkvxGIFHKLqZftoX0gU_M-uq3Vxhel7-mIdAnxqa97qLQw0fT9Zxj0xoj3Dq-wYFuaz9svfoyMVYj2ru4aPFvITuMFNG49u7SKOIM79DMu7ty650EhFfu7y3yY9IFWoFtKniUBawO76IqOYGAnkQzFaaB9ysyOFhFWOS-jC7kLOV8iOp6flpvzMOk_HDkP15g96i8y5rAgzz6RSt9SoM_upfVuwCupU12vM-t3bz5WzqtSXYrS3GFbOCrB8"/>
-                                GitHub
-                            </button>
-</div>
-<div class="relative flex items-center justify-center py-4">
-<div class="w-full h-px bg-surface-container-high"></div>
-<span class="absolute px-4 bg-surface-container-lowest text-xs font-semibold text-outline uppercase tracking-widest">Or sign up with</span>
-</div>
-<div class="grid grid-cols-2 gap-4">
-<button class="flex items-center justify-center gap-2 py-2.5 px-4 bg-surface-container-low rounded-lg hover:bg-surface-container-high transition-colors font-medium text-on-surface text-sm" type="button">
-<img alt="Google" class="w-4 h-4" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCl8IVUihj3jsX1ikgwCw3T3OMsqJML3-lSZTm_FO8L-s0L1Qzla525qccD7FKfT-9SNufFXetNaOmAIPkkK10tubc14rMnv3_6P63WjDTrK_Iocl_HJXffEU7-KuSW1mK83TaC0PzR6ENljGDzW6hFfpjWpYlTrb6_XfhkPCnjdmNGpDEWBraKdWcA6bxGBp6zfbXeEwRlx-meFXMZEESwhD_7kNtZNDTRuQE4-drvXFJKSC4v3K4GP_fHvO4uRqe3HPdX7JW1uQk"/>
-                                Google
-                            </button>
-<button class="flex items-center justify-center gap-2 py-2.5 px-4 bg-surface-container-low rounded-lg hover:bg-surface-container-high transition-colors font-medium text-on-surface text-sm" type="button">
-<img alt="GitHub" class="w-4 h-4" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDxd-TstDOJqk2bK7_dUkvxGIFHKLqZftoX0gU_M-uq3Vxhel7-mIdAnxqa97qLQw0fT9Zxj0xoj3Dq-wYFuaz9svfoyMVYj2ru4aPFvITuMFNG49u7SKOIM79DMu7ty650EhFfu7y3yY9IFWoFtKniUBawO76IqOYGAnkQzFaaB9ysyOFhFWOS-jC7kLOV8iOp6flpvzMOk_HDkP15g96i8y5rAgzz6RSt9SoM_upfVuwCupU12vM-t3bz5WzqtSXYrS3GFbOCrB8"/>
-                                GitHub
-                            </button>
+<!-- Primary Action -->
+<button class="w-full bg-primary text-on-primary py-4 px-6 rounded-xl font-bold text-base shadow-lg shadow-primary/20 hover:bg-primary-container active:scale-95 transition-all duration-200 flex items-center justify-center gap-2" type="submit">
+                        Sign In
+                        <span class="material-symbols-outlined text-[20px]">arrow_forward</span>
+</button>
+<!-- Secondary Accent: Success State Logic Demo -->
+<div class="flex items-center gap-3 p-4 bg-secondary/5 rounded-xl border-l-4 border-secondary">
+<span class="material-symbols-outlined text-secondary" style="font-variation-settings: 'FILL' 1;">verified</span>
+<p class="text-xs text-on-secondary-fixed-variant font-medium">
+                            Your account is secured with 256-bit encryption and multi-factor authentication.
+                        </p>
 </div>
 </form>
-<div class="mt-10 text-center">
-<p class="text-on-surface-variant text-sm">
-                            Already have an account? 
-                            <a class="text-primary font-bold hover:underline ml-1" href="#">Sign In</a>
+<footer class="mt-12 text-center">
+<p class="text-on-surface-variant text-sm font-medium">
+                        Don't have an account? 
+                        <a class="text-primary font-bold hover:underline underline-offset-4 ml-1 transition-all" href="#">Create an account</a>
 </p>
+<div class="mt-12 flex items-center justify-center gap-6">
+<a class="text-xs font-semibold text-outline hover:text-on-surface transition-colors" href="#">Privacy Policy</a>
+<span class="w-1 h-1 bg-outline-variant rounded-full"></span>
+<a class="text-xs font-semibold text-outline hover:text-on-surface transition-colors" href="#">Terms of Service</a>
+<span class="w-1 h-1 bg-outline-variant rounded-full"></span>
+<a class="text-xs font-semibold text-outline hover:text-on-surface transition-colors" href="#">Contact Support</a>
 </div>
+</footer>
 </div>
-</div>
-</div>
+</section>
 </main>
-<!-- Suppressed Nav Shell for Transactional Focus -->
-<!-- Branding Footnote -->
-<div class="fixed bottom-6 w-full text-center pointer-events-none opacity-50">
-<p class="text-xs font-medium text-on-surface-variant Inter tracking-tight">© 2024 Resolvo Inc. All rights reserved.</p>
-</div>
+<!-- Footer Component logic: Hidden for Login screen per platform rules -->
 </body></html>
