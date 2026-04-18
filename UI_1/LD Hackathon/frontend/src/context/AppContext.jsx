@@ -1,4 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { databases, APPWRITE_CONFIG } from '../lib/appwrite';
+import { Query } from 'appwrite';
 
 const AppContext = createContext();
 
@@ -31,6 +33,54 @@ export const AppProvider = ({ children }) => {
   const fetchComplaints = async () => {
     try {
       setIsLoading(true);
+
+      // Try Appwrite first if configured
+      if (APPWRITE_CONFIG.databaseId && APPWRITE_CONFIG.collectionId) {
+        try {
+          const response = await databases.listDocuments(
+            APPWRITE_CONFIG.databaseId,
+            APPWRITE_CONFIG.collectionId,
+            [Query.orderDesc('$createdAt'), Query.limit(100)]
+          );
+          
+          // Map Appwrite document structure to our app structure
+          const mappedData = response.documents.map(doc => {
+            const createdAt = doc.$createdAt || new Date().toISOString();
+            const slaHours = doc.resolution_time || 24;
+            const slaDeadline = new Date(new Date(createdAt).getTime() + slaHours * 60 * 60 * 1000).toISOString();
+            
+            return {
+              id: doc.complaint_id || doc.$id,
+              title: doc.text ? (doc.text.length > 50 ? doc.text.substring(0, 50) + '...' : doc.text) : 'No Title',
+              description: doc.text || '',
+              category: doc.category || 'Product Issue',
+              priority: doc.priority || 'Medium',
+              status: doc.status || 'Open',
+              assignedTo: doc.assignedTo || 'Auto Assigned',
+              sentiment: { 
+                label: doc.sentiment > 0.7 ? 'Happy' : doc.sentiment < 0.4 ? 'Angry' : 'Neutral', 
+                icon: doc.sentiment > 0.7 ? '😊' : doc.sentiment < 0.4 ? '😠' : '😐',
+                score: (doc.sentiment || 0.5) * 100 
+              },
+              createdAt,
+              slaDeadline,
+              confidence: doc.confidence || '90%',
+              resolution: doc.resolution || 'Pending Analysis',
+              resolutionExplanation: doc.resolutionExplanation || 'Awaiting further data.',
+              attempts: doc.attempts || 1,
+              escalated: doc.escalated || false,
+              ...doc
+            };
+          });
+          
+          setComplaints(mappedData);
+          return;
+        } catch (appwriteError) {
+          console.warn('Appwrite fetch failed, falling back to local API:', appwriteError);
+        }
+      }
+
+      // Fallback to local API
       const response = await fetch(`${API_BASE}/complaints`);
       const data = await response.json();
       setComplaints(data);
@@ -43,6 +93,36 @@ export const AppProvider = ({ children }) => {
 
   const addComplaint = async (data) => {
     try {
+      // Try Appwrite if configured
+      if (APPWRITE_CONFIG.databaseId && APPWRITE_CONFIG.collectionId) {
+        try {
+          const response = await databases.createDocument(
+            APPWRITE_CONFIG.databaseId,
+            APPWRITE_CONFIG.collectionId,
+            'unique()',
+            {
+              complaint_id: `CMP-${Math.floor(1000 + Math.random() * 9000)}`,
+              text: data.description || '',
+              category: data.category || 'General',
+              priority: data.priority || 'Medium',
+              sentiment: data.sentiment?.score / 100 || 0,
+              status: 'Open',
+              // Add other fields as per Appwrite schema
+            }
+          );
+          const newComplaint = {
+            id: response.$id,
+            ...data,
+            createdAt: response.$createdAt
+          };
+          setComplaints(prev => [newComplaint, ...prev]);
+          return newComplaint;
+        } catch (appwriteError) {
+          console.warn('Appwrite create failed, falling back to local API:', appwriteError);
+        }
+      }
+
+      // Fallback to local API
       const response = await fetch(`${API_BASE}/complaints`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

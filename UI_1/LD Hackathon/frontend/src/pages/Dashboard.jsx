@@ -24,9 +24,10 @@ import {
   ArrowDownRight
 } from 'lucide-react';
 import { useApp } from '../context/AppContext';
+import TrendChart from '../components/TrendChart';
 
 const Dashboard = () => {
-  const { complaints } = useApp();
+  const { complaints, isLoading } = useApp();
 
   // Data processing for charts
   const categoryData = [
@@ -41,15 +42,7 @@ const Dashboard = () => {
     { name: 'Low', count: complaints.filter(c => c.priority === 'Low').length },
   ];
 
-  const trendData = [
-    { name: 'Mon', count: 12 },
-    { name: 'Tue', count: 18 },
-    { name: 'Wed', count: 15 },
-    { name: 'Thu', count: 25 },
-    { name: 'Fri', count: 20 },
-    { name: 'Sat', count: 10 },
-    { name: 'Sun', count: 8 },
-  ];
+  // Removed static trendData - now handled by TrendChart component
 
   const COLORS = ['#1d4ed8', '#0ea5e9', '#6366f1'];
   const PRIORITY_COLORS = { High: '#ef4444', Medium: '#f59e0b', Low: '#10b981' };
@@ -99,25 +92,7 @@ const Dashboard = () => {
             <p>Number of daily complaints received.</p>
           </div>
           <div className="chart-container">
-            <ResponsiveContainer width="100%" height={300}>
-              <LineChart data={trendData}>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fill: '#64748b', fontSize: 12}} dy={10} />
-                <YAxis axisLine={false} tickLine={false} tick={{fill: '#64748b', fontSize: 12}} />
-                <Tooltip 
-                  contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
-                  cursor={{ stroke: 'var(--primary)', strokeWidth: 1 }}
-                />
-                <Line 
-                  type="monotone" 
-                  dataKey="count" 
-                  stroke="var(--primary)" 
-                  strokeWidth={3} 
-                  dot={{ r: 4, fill: 'var(--primary)', strokeWidth: 2, stroke: '#fff' }}
-                  activeDot={{ r: 6, strokeWidth: 0 }}
-                />
-              </LineChart>
-            </ResponsiveContainer>
+            <TrendChart data={complaints} isLoading={isLoading} period="day" />
           </div>
         </div>
 
