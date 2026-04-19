@@ -1,0 +1,526 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Resolvo - AI Complaint Classification & Resolution</title>
+  <meta name="description" content="AI-powered complaint classification, priority tagging, and resolution recommendation engine for the wellness industry.">
+  <link rel="stylesheet" href="/static/style.css">
+  <script src="https://cdn.jsdelivr.net/npm/appwrite@14.0.1"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+</head>
+<body>
+  <div class="app-shell">
+    <!-- SIDEBAR -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-brand">
+        <div class="brand-icon">R</div>
+        <div class="brand-text">
+          <span class="brand-name">Resolvo</span>
+          <span class="brand-tagline">AI Complaint Resolution</span>
+        </div>
+      </div>
+      <nav class="sidebar-nav" id="sidebar-nav">
+        <p class="nav-label">Main Menu</p>
+        <ul id="nav-links"></ul>
+      </nav>
+      <div class="sidebar-footer">
+        <div class="user-profile">
+          <div class="user-avatar">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+          </div>
+          <div class="user-info">
+            <p class="user-name" id="user-display-name">{{ user.name }}</p>
+            <p class="user-role-label" id="user-role-label">{{ user.role or 'Customer Support Executive' }}</p>
+          </div>
+        </div>
+        <a href="/logout" class="logout-btn">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+          <span>Sign Out</span>
+        </a>
+      </div>
+    </aside>
+
+    <!-- MAIN CONTENT -->
+    <div class="main-area">
+      <header class="top-navbar">
+        <div class="nav-search">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+          <input type="text" id="global-search" placeholder="Search complaints, IDs, or categories...">
+        </div>
+        <div class="nav-actions">
+          <div class="role-switcher">
+            <label>View as:</label>
+            <select id="role-select">
+              <option value="Customer Support Executive">Support Executive</option>
+              <option value="Quality Assurance Team">QA Team</option>
+              <option value="Operations Manager">Operations Manager</option>
+            </select>
+          </div>
+        </div>
+      </header>
+
+      <main class="page-body">
+
+        <!-- ════════════════════════════════════════════════════════════════════
+             VIEW: CSE — Support Dashboard (only sidebar item for CSE)
+             ════════════════════════════════════════════════════════════════════ -->
+        <section id="view-support" class="view">
+          <div class="view-top">
+            <div>
+              <h1>Support Dashboard</h1>
+              <p>Submit complaints via multiple channels and manage active cases with AI-powered resolution.</p>
+            </div>
+            <div class="header-actions">
+              <button class="btn btn-primary" onclick="switchSubView('support-history')">Active Cases</button>
+              <button class="btn btn-outline" onclick="switchSubView('support-new')">New Complaint</button>
+            </div>
+          </div>
+
+          <!-- Sub: Active Cases (split pane) -->
+          <div id="support-history" class="sub-view active">
+            <div class="history-controls">
+              <div class="search-bar-comp">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                <input type="text" id="support-search" placeholder="Search by ID, title, or description...">
+              </div>
+            </div>
+            <div class="complaint-split-grid">
+              <div class="card complaint-list-pane" id="support-complaint-list">
+                <div class="empty-history"><p>Loading complaints...</p></div>
+              </div>
+              <div class="complaint-detail-side" id="support-detail-pane">
+                <div class="detail-placeholder">
+                  <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+                  <p>Select a complaint to view AI classification, resolution steps, and SLA tracking.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Sub: New Complaint (channels: Text, Email, Call, Live Audio, Direct) -->
+          <div id="support-new" class="sub-view">
+            <div class="channel-header">
+              <h2>Submit New Complaint</h2>
+              <p>Choose the input channel. AI classification and priority tagging happens automatically.</p>
+            </div>
+            <div class="type-selection-grid" id="type-selection-grid">
+              <div class="card type-card" onclick="selectComplaintType('Text')">
+                <div class="type-icon"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg></div>
+                <h3>Text / Form</h3>
+                <p>Submit complaint text for instant AI classification.</p>
+              </div>
+              <div class="card type-card" onclick="selectComplaintType('Email')">
+                <div class="type-icon"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg></div>
+                <h3>Email Complaint</h3>
+                <p>AI-assisted email drafting with auto-classification.</p>
+              </div>
+              <div class="card type-card" onclick="selectComplaintType('Call')">
+                <div class="type-icon"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"></path></svg></div>
+                <h3>Call Summary</h3>
+                <p>Log call summaries with dial pad or voice.</p>
+              </div>
+              <div class="card type-card" onclick="selectComplaintType('LiveAudio')">
+                <div class="type-icon"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="23"></line><line x1="8" y1="23" x2="16" y2="23"></line></svg></div>
+                <h3>Live Audio</h3>
+                <p>Record live audio for real-time AI transcription and classification.</p>
+              </div>
+              <div class="card type-card" onclick="selectComplaintType('Direct')">
+                <div class="type-icon"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg></div>
+                <h3>Direct / Walk-in</h3>
+                <p>Quick entry for walk-in or direct communication complaints.</p>
+              </div>
+            </div>
+
+            <!-- Text Complaint Form -->
+            <div id="text-form-container" class="detail-form-container" style="display:none;">
+              <button class="back-link" onclick="backToChannels()">&larr; Back to channels</button>
+              <div class="card detail-form-card">
+                <h2>New Text Complaint</h2>
+                <form id="text-complaint-form">
+                  <div class="form-group"><label>Complaint Title</label><input type="text" id="txt-title" required placeholder="e.g., Product quality issue on batch #123"></div>
+                  <div class="form-group"><label>Detailed Description</label><textarea id="txt-desc" required rows="6" placeholder="Describe the complaint in detail..."></textarea></div>
+                  <div class="form-group"><label>Upload Evidence</label>
+                    <div class="upload-zone"><label class="upload-label"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg><span>Click to Upload</span><input type="file" id="txt-image" accept="image/*" hidden></label></div>
+                  </div>
+                  <button type="submit" class="btn btn-primary submit-full">Submit for AI Classification</button>
+                </form>
+              </div>
+            </div>
+
+            <!-- Email Split View -->
+            <div id="email-form-container" class="detail-form-container" style="display:none;">
+              <button class="back-link" onclick="backToChannels()">&larr; Back to channels</button>
+              <div class="email-split">
+                <div class="pane user-pane">
+                  <div class="pane-hdr"><span>Compose Email</span></div>
+                  <div class="email-form-inner">
+                    <div class="email-row"><label>To:</label><input type="text" id="email-to" placeholder="Recipient"></div>
+                    <div class="email-row"><label>Subject:</label><input type="text" id="email-subject" placeholder="Complaint Subject"></div>
+                    <textarea id="email-body" placeholder="Describe your issue..." rows="10"></textarea>
+                    <button type="button" class="generate-btn" id="ai-draft-btn" onclick="generateAIDraft()"><span>Draft with AI</span></button>
+                  </div>
+                </div>
+                <div class="pane ai-pane">
+                  <div class="pane-hdr ai-hdr"><span>AI-Generated Draft</span></div>
+                  <div class="ai-content" id="ai-draft-content">
+                    <div class="empty-ai"><p style="font-weight:600; margin-bottom:0.5rem;">AI Draft Assistant</p><p>Fill in details and click Draft with AI</p></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Call / Dial Pad -->
+            <div id="call-form-container" class="detail-form-container" style="display:none;">
+              <button class="back-link" onclick="backToChannels()">&larr; Back to channels</button>
+              <div class="call-flow">
+                <h2>Call Summary</h2>
+                <p style="color:var(--text-muted); margin-bottom:1.5rem;">Dial customer number or use voice input.</p>
+                <div class="dial-pad">
+                  <div class="dial-status-bar">
+                    <button class="voice-btn" id="voice-btn" onclick="toggleVoiceInput()"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="23"></line></svg></button>
+                  </div>
+                  <div class="dial-display"><div class="number-display" id="dial-number">Enter Number</div><div class="dial-error" id="dial-error" style="display:none;"></div></div>
+                  <div class="digits-grid" id="digits-grid"></div>
+                  <div class="dial-actions">
+                    <div style="width:48px"></div>
+                    <button class="call-btn" onclick="handleDialCall()"><svg width="28" height="28" viewBox="0 0 24 24" fill="white" stroke="white" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"></path></svg></button>
+                    <button class="delete-btn" onclick="dialDelete()"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 4H8l-7 8 7 8h13a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2z"></path><line x1="18" y1="9" x2="12" y2="15"></line><line x1="12" y1="9" x2="18" y2="15"></line></svg></button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Live Audio Channel -->
+            <div id="liveaudio-form-container" class="detail-form-container" style="display:none;">
+              <button class="back-link" onclick="backToChannels()">&larr; Back to channels</button>
+              <div style="max-width:700px; margin:0 auto;">
+                <h2 style="text-align:center; margin-bottom:0.5rem;">Live Audio Recording</h2>
+                <p style="text-align:center; color:var(--text-muted); margin-bottom:1.5rem;">Record live customer audio. AI transcribes and classifies in real-time.</p>
+                <div class="card" style="padding:2rem;">
+                  <div class="audio-visualizer-area" style="margin-bottom:1.5rem;"><canvas id="audio-waveform" width="600" height="100"></canvas></div>
+                  <div class="audio-controls" style="text-align:center;">
+                    <button class="mic-btn" id="mic-btn" onclick="toggleAudioRecording()"><div class="mic-ring" id="mic-ring"></div><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="23"></line><line x1="8" y1="23" x2="16" y2="23"></line></svg></button>
+                    <p class="mic-status" id="mic-status">Tap to start recording</p>
+                    <p class="mic-timer" id="mic-timer"></p>
+                  </div>
+                  <div class="card" id="transcript-panel" style="display:none; margin-top:1.5rem; padding:1.25rem; border:1px solid var(--border);">
+                    <h3 style="font-size:0.95rem; font-weight:700; margin-bottom:0.75rem; color:var(--primary);">Transcript</h3>
+                    <div class="transcript-text" id="transcript-text"></div>
+                    <div id="audio-analysis-result" style="margin-top:1rem;"></div>
+                    <div style="display:flex; justify-content:flex-end; gap:0.75rem; margin-top:1rem;">
+                      <button class="btn btn-primary" onclick="convertAudioToComplaint()">Submit as Complaint</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Direct / Walk-in -->
+            <div id="direct-form-container" class="detail-form-container" style="display:none;">
+              <button class="back-link" onclick="backToChannels()">&larr; Back to channels</button>
+              <div style="max-width:650px; margin:0 auto;">
+                <div class="card" style="padding:2rem;">
+                  <h2 style="margin-bottom:0.5rem;">Direct Complaint Entry</h2>
+                  <p style="color:var(--text-muted); margin-bottom:1.5rem;">Quick entry for walk-in or direct communication.</p>
+                  <form id="direct-complaint-form">
+                    <div class="form-group"><label style="font-size:0.85rem; font-weight:600; color:var(--text-secondary); display:block; margin-bottom:0.5rem;">Customer Name</label><input type="text" id="direct-cname" placeholder="Customer full name" style="width:100%; padding:0.75rem; border:1px solid var(--border); border-radius:var(--radius-md); font-size:0.9rem; background:var(--bg-input); color:var(--text-main);"></div>
+                    <div class="form-group"><label style="font-size:0.85rem; font-weight:600; color:var(--text-secondary); display:block; margin-bottom:0.5rem;">Channel</label>
+                      <select id="direct-channel" style="width:100%; padding:0.75rem; border:1px solid var(--border); border-radius:var(--radius-md); font-size:0.9rem; background:#fff; color:var(--text-main);"><option value="Call Centre">Call Centre</option><option value="Email">Email</option><option value="Direct Communication">Direct Communication</option></select>
+                    </div>
+                    <div class="form-group"><label style="font-size:0.85rem; font-weight:600; color:var(--text-secondary); display:block; margin-bottom:0.5rem;">Complaint Description</label><textarea id="direct-desc" required rows="5" placeholder="Transcribe or summarize..." style="width:100%; padding:0.75rem; border:1px solid var(--border); border-radius:var(--radius-md); font-size:0.9rem; font-family:inherit; background:var(--bg-input); color:var(--text-main);"></textarea></div>
+                    <button type="submit" class="btn btn-primary submit-full">Classify & Submit</button>
+                  </form>
+                  <div id="direct-result" class="review-result" style="display:none; margin-top:1.5rem;"></div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Success View -->
+            <div id="success-container" class="detail-form-container" style="display:none;">
+              <div class="success-card card">
+                <div class="check-icon-lg"><svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg></div>
+                <h1>Complaint Submitted</h1>
+                <p>Case <strong id="success-id"></strong> has been auto-classified and prioritized.</p>
+                <div style="display:flex; gap:0.75rem; justify-content:center; margin-top:1.5rem;">
+                  <button class="btn btn-primary" onclick="resetSubmitFlow()">Submit Another</button>
+                  <button class="btn btn-outline" onclick="downloadComplaintPDF()">Download PDF Report</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Sub: AI Chat -->
+          <div id="support-chat" class="sub-view">
+            <div class="chat-layout">
+              <div class="chat-sidebar glass-panel">
+                <div class="sidebar-header-chat"><h3>AI Analysis</h3><div class="live-toggle"><span class="live-label">LIVE</span><label class="switch"><input type="checkbox" id="live-mode-toggle"><span class="slider round"></span></label></div></div>
+                <div class="meta-card"><span class="meta-label">Category</span><span id="meta-category" class="badge category-badge">Analyzing...</span></div>
+                <div class="meta-card"><span class="meta-label">Priority</span><span id="meta-priority" class="badge priority-low">...</span></div>
+                <div class="meta-card"><span class="meta-label">Sentiment</span><span id="meta-sentiment" class="meta-value">0.0</span></div>
+                <div class="chat-sidebar-footer">
+                  <p class="attempt-label">AI attempt: <span id="failed-turns">0</span>/2</p>
+                  <button id="escalate-btn" class="secondary-btn" disabled onclick="handleEscalate()">Escalate to Human</button>
+                  <button class="secondary-btn outline" onclick="switchSubView('support-history')">Close Session</button>
+                </div>
+              </div>
+              <div class="chat-main glass-panel">
+                <div id="chat-messages-list" class="chat-messages"></div>
+                <div class="chat-input-area">
+                  <div class="chat-input-wrapper">
+                    <label for="chat-file-input" class="attach-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"></path></svg></label>
+                    <input type="file" id="chat-file-input" accept="image/*" style="display:none;">
+                    <input type="text" id="chat-input" class="chat-input" placeholder="Describe the customer's issue...">
+                  </div>
+                  <button class="primary-btn" onclick="sendChatMessage()">Send</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ════════════════════════════════════════════════════════════════════
+             VIEW: QAT — Quality Analysis (table with enhanced filters)
+             ════════════════════════════════════════════════════════════════════ -->
+        <section id="view-complaints" class="view">
+          <div class="view-top">
+            <div><h1>Quality Analysis</h1><p>Review, filter, sort, and verify AI-classified complaints.</p></div>
+          </div>
+          <div class="card filter-bar-card">
+            <div class="filter-row">
+              <div class="search-bar-comp">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                <input type="text" id="list-search" placeholder="Search by ID, title, description, category...">
+              </div>
+              <div class="select-filters">
+                <div class="select-item"><label>Category</label><select id="filter-cat"><option>All</option><option>Product</option><option>Packaging</option><option>Trade</option></select></div>
+                <div class="select-item"><label>Priority</label><select id="filter-pri"><option>All</option><option>High</option><option>Medium</option><option>Low</option></select></div>
+                <div class="select-item"><label>Status</label><select id="filter-stat"><option>All</option><option>Open</option><option>Resolved</option><option>Escalated</option></select></div>
+                <div class="select-item"><label>Sort by</label><select id="sort-by"><option value="date-desc">Newest First</option><option value="date-asc">Oldest First</option><option value="priority-desc">Priority (High First)</option><option value="sentiment-asc">Sentiment (Worst First)</option><option value="resolution-asc">Resolution Time (Fastest)</option><option value="resolution-desc">Resolution Time (Slowest)</option></select></div>
+              </div>
+              <button class="clear-filter-btn" onclick="clearFilters()">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon><line x1="1" y1="1" x2="23" y2="23"></line></svg>
+                <span>Clear</span>
+              </button>
+            </div>
+          </div>
+          <div class="card table-card">
+            <table class="data-table" id="complaint-table">
+              <thead><tr>
+                <th class="sortable" onclick="sortTable('id')">ID</th>
+                <th class="sortable" onclick="sortTable('title')">Description & Category</th>
+                <th class="sortable" onclick="sortTable('priority')">Priority</th>
+                <th class="sortable" onclick="sortTable('sentiment')">Sentiment</th>
+                <th class="sortable" onclick="sortTable('status')">Status</th>
+                <th class="sortable" onclick="sortTable('resolutionTime')">Res. Time</th>
+                <th>Actions</th>
+              </tr></thead>
+              <tbody id="complaint-table-body"><tr><td colspan="7" class="empty-state">Loading...</td></tr></tbody>
+            </table>
+          </div>
+        </section>
+
+        <!-- View: Complaint Detail -->
+        <section id="view-detail" class="view"><div id="detail-content"></div></section>
+
+        <!-- ════════════════════════════════════════════════════════════════════
+             VIEW: QAT — AI Re-Review
+             ════════════════════════════════════════════════════════════════════ -->
+        <section id="view-ai-review" class="view">
+          <div class="view-top"><div><h1>AI Re-Review</h1><p>Re-analyze and verify complaint classifications using the AI engine.</p></div></div>
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:1.5rem;">
+            <div class="ai-review-panel">
+              <h3>Select Complaint</h3>
+              <div class="review-input-area">
+                <div class="search-bar-comp" style="margin-bottom:0.75rem;">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                  <input type="text" id="review-search" placeholder="Filter complaints..." oninput="filterReviewDropdown()">
+                </div>
+                <select id="review-complaint-select" style="width:100%; padding:0.75rem; border:1px solid var(--border); border-radius:var(--radius-md); font-size:0.85rem; background:#fff; color:var(--text-main);"><option value="">-- Select --</option></select>
+                <div id="review-complaint-preview" style="padding:1rem; background:var(--bg-hover); border-radius:var(--radius-md); border:1px solid var(--border-light); min-height:60px; font-size:0.85rem; color:var(--text-secondary);"></div>
+                <button class="btn btn-primary" onclick="runAIReview()" id="ai-review-btn">Re-Classify with AI</button>
+              </div>
+            </div>
+            <div class="ai-review-panel">
+              <h3>Re-Classification Result</h3>
+              <div id="ai-review-result" class="review-result" style="min-height:180px;"><p style="color:var(--text-muted); text-align:center;">Select a complaint and re-classify.</p></div>
+            </div>
+          </div>
+          <div style="margin-top:1.5rem;">
+            <h3 style="font-size:1rem; font-weight:700; margin-bottom:1rem;">Standalone Text Classification</h3>
+            <div class="ai-review-panel">
+              <div class="review-input-area">
+                <textarea id="manual-review-text" placeholder="Paste any complaint text here for AI analysis..."></textarea>
+                <button class="btn btn-primary" onclick="runManualReview()">Analyze Text</button>
+              </div>
+              <div id="manual-review-result" class="review-result" style="display:none; margin-top:1rem;"></div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ════════════════════════════════════════════════════════════════════
+             VIEW: QAT — Email Communication
+             ════════════════════════════════════════════════════════════════════ -->
+        <section id="view-qat-email" class="view">
+          <div class="view-top"><div><h1>Send Email</h1><p>Compose and send professional emails regarding complaint resolutions.</p></div></div>
+          <div style="display:grid; grid-template-columns:280px 1fr; gap:1.5rem;">
+            <div class="card" style="padding:1.25rem;">
+              <h3 style="font-size:0.85rem; font-weight:700; margin-bottom:1rem;">Select Complaint</h3>
+              <select id="qat-email-complaint" style="width:100%; padding:0.6rem; border:1px solid var(--border); border-radius:var(--radius-md); font-size:0.82rem; background:#fff; margin-bottom:0.75rem;" onchange="previewEmailComplaint()"><option value="">-- Choose --</option></select>
+              <div id="qat-email-preview" style="font-size:0.8rem; color:var(--text-muted);"></div>
+            </div>
+            <div class="email-mock-window">
+              <div class="email-mock-toolbar">
+                <div class="dots"><div class="dot dot-red"></div><div class="dot dot-yellow"></div><div class="dot dot-green"></div></div>
+                <span>New Message</span>
+              </div>
+              <div class="email-mock-body">
+                <div class="email-field-row"><label>To:</label><input type="text" id="qat-email-to" placeholder="customer@email.com"></div>
+                <div class="email-field-row"><label>CC:</label><input type="text" id="qat-email-cc" placeholder="manager@company.com"></div>
+                <div class="email-field-row"><label>Subject:</label><input type="text" id="qat-email-subject" placeholder="Re: Complaint Resolution"></div>
+                <textarea class="email-body-area" id="qat-email-body" placeholder="Compose your email here..."></textarea>
+              </div>
+              <div class="email-mock-footer">
+                <div style="display:flex; gap:0.75rem;">
+                  <button class="btn btn-primary" onclick="sendQATEmail()">Send Email</button>
+                  <button class="btn btn-outline" onclick="autoFillQATEmail()">Auto-Fill from AI</button>
+                </div>
+                <span style="font-size:0.75rem; color:var(--text-muted);">Resolvo QAT Mailer</span>
+              </div>
+            </div>
+          </div>
+          <div id="qat-email-sent" class="card" style="display:none; margin-top:1.5rem; padding:1.5rem; text-align:center;">
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+            <h3 style="margin-top:0.75rem; color:var(--success);">Email Sent Successfully</h3>
+            <p style="color:var(--text-muted); font-size:0.88rem;">The email has been dispatched to the customer.</p>
+          </div>
+        </section>
+
+        <!-- ════════════════════════════════════════════════════════════════════
+             VIEW: OPS — Dashboard (stats + charts)
+             ════════════════════════════════════════════════════════════════════ -->
+        <section id="view-dashboard" class="view">
+          <div class="view-top">
+            <div><h1>Operations Dashboard</h1><p>Complaint analytics, SLA compliance, and workload metrics.</p></div>
+          </div>
+          <div class="stats-grid" id="stats-grid"></div>
+          <div class="charts-grid">
+            <div class="card chart-card chart-wide"><div class="chart-header"><h3>Resolution Time by Complaint</h3><p>Hours to resolve per complaint.</p></div><canvas id="trend-chart" height="280"></canvas></div>
+            <div class="card chart-card"><div class="chart-header"><h3>Category Distribution</h3><p>Product / Packaging / Trade</p></div><canvas id="category-chart" height="260"></canvas></div>
+            <div class="card chart-card"><div class="chart-header"><h3>Priority Distribution</h3><p>High / Medium / Low</p></div><canvas id="priority-chart" height="260"></canvas></div>
+          </div>
+        </section>
+
+        <!-- ════════════════════════════════════════════════════════════════════
+             VIEW: OPS — All Complaints Table
+             ════════════════════════════════════════════════════════════════════ -->
+        <section id="view-ops-complaints" class="view">
+          <div class="view-top">
+            <div><h1>All Complaints</h1><p>Full complaint directory with search, filter, and detail view.</p></div>
+            <div class="header-actions">
+              <div class="export-bar">
+                <button class="export-btn" onclick="window.location.href='/api/export/csv'">Export CSV</button>
+                <button class="export-btn" onclick="window.location.href='/api/export/pdf'">Export PDF</button>
+              </div>
+            </div>
+          </div>
+          <div class="card filter-bar-card">
+            <div class="filter-row">
+              <div class="search-bar-comp">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                <input type="text" id="ops-list-search" placeholder="Search...">
+              </div>
+              <div class="select-filters">
+                <div class="select-item"><label>Category</label><select id="ops-filter-cat"><option>All</option><option>Product</option><option>Packaging</option><option>Trade</option></select></div>
+                <div class="select-item"><label>Priority</label><select id="ops-filter-pri"><option>All</option><option>High</option><option>Medium</option><option>Low</option></select></div>
+                <div class="select-item"><label>Status</label><select id="ops-filter-stat"><option>All</option><option>Open</option><option>Resolved</option><option>Escalated</option></select></div>
+              </div>
+              <button class="clear-filter-btn" onclick="clearOpsFilters()">Clear</button>
+            </div>
+          </div>
+          <div class="card table-card">
+            <table class="data-table"><thead><tr><th>ID</th><th>Title & Category</th><th>Priority</th><th>Sentiment</th><th>Status</th><th>Res. Time</th><th></th></tr></thead>
+              <tbody id="ops-complaint-table-body"><tr><td colspan="7" class="empty-state">Loading...</td></tr></tbody>
+            </table>
+          </div>
+        </section>
+
+        <!-- ════════════════════════════════════════════════════════════════════
+             VIEW: OPS — SLA Settings
+             ════════════════════════════════════════════════════════════════════ -->
+        <section id="view-sla-settings" class="view">
+          <div class="view-top"><div><h1>SLA Time Settings</h1><p>Configure service-level agreement deadlines by priority level.</p></div></div>
+          <div class="card" style="padding:2rem;">
+            <div class="sla-settings-grid">
+              <div class="card sla-setting-card" style="border-color:#fecdd3;">
+                <h4 style="color:var(--danger);">High Priority</h4>
+                <p style="font-size:0.8rem; color:var(--text-muted); margin-bottom:1rem;">Critical complaints requiring immediate attention.</p>
+                <div class="sla-input-group"><input type="number" id="sla-high" value="24" min="1" max="168"><span>hours</span></div>
+              </div>
+              <div class="card sla-setting-card" style="border-color:#fde68a;">
+                <h4 style="color:var(--warning);">Medium Priority</h4>
+                <p style="font-size:0.8rem; color:var(--text-muted); margin-bottom:1rem;">Standard complaints with moderate urgency.</p>
+                <div class="sla-input-group"><input type="number" id="sla-medium" value="48" min="1" max="168"><span>hours</span></div>
+              </div>
+              <div class="card sla-setting-card" style="border-color:#bfdbfe;">
+                <h4 style="color:var(--primary);">Low Priority</h4>
+                <p style="font-size:0.8rem; color:var(--text-muted); margin-bottom:1rem;">General inquiries and minor issues.</p>
+                <div class="sla-input-group"><input type="number" id="sla-low" value="72" min="1" max="168"><span>hours</span></div>
+              </div>
+            </div>
+            <div style="text-align:center; margin-top:2rem;">
+              <button class="btn btn-primary" onclick="saveSLASettings()" id="sla-save-btn">Save SLA Settings</button>
+              <p id="sla-save-msg" style="display:none; margin-top:0.75rem; color:var(--success); font-weight:600;"></p>
+            </div>
+          </div>
+          <div class="card" style="padding:1.5rem; margin-top:1.5rem;">
+            <h3 style="font-size:0.95rem; font-weight:700; margin-bottom:1rem;">Current SLA Compliance</h3>
+            <div id="sla-compliance-table"></div>
+          </div>
+        </section>
+
+        <!-- ════════════════════════════════════════════════════════════════════
+             VIEW: OPS — Backup & Export
+             ════════════════════════════════════════════════════════════════════ -->
+        <section id="view-backup" class="view">
+          <div class="view-top"><div><h1>Backup & Export</h1><p>Download filtered complaint data for local backup and reporting.</p></div></div>
+          <div class="card" style="padding:2rem;">
+            <h3 style="font-size:1rem; font-weight:700; margin-bottom:1.25rem;">Filter Data for Export</h3>
+            <div class="backup-filters">
+              <div class="backup-filter-item"><label>Category</label><select id="backup-cat"><option value="All">All Categories</option><option value="Product">Product</option><option value="Packaging">Packaging</option><option value="Trade">Trade</option></select></div>
+              <div class="backup-filter-item"><label>Priority</label><select id="backup-pri"><option value="All">All Priorities</option><option value="High">High</option><option value="Medium">Medium</option><option value="Low">Low</option></select></div>
+              <div class="backup-filter-item"><label>Status</label><select id="backup-stat"><option value="All">All Statuses</option><option value="Open">Open</option><option value="Resolved">Resolved</option><option value="Escalated">Escalated</option></select></div>
+              <div class="backup-filter-item"><label>Date From</label><input type="date" id="backup-from"></div>
+              <div class="backup-filter-item"><label>Date To</label><input type="date" id="backup-to"></div>
+            </div>
+            <div id="backup-preview" style="margin-bottom:1.5rem; font-size:0.88rem; color:var(--text-muted);"></div>
+            <div class="backup-actions">
+              <button class="btn btn-primary" onclick="downloadBackupCSV()">Download CSV Backup</button>
+              <button class="btn btn-outline" onclick="downloadBackupPDF()">Download PDF Report</button>
+              <button class="btn btn-outline" onclick="previewBackup()">Preview Selection</button>
+            </div>
+            <div id="backup-result-table" style="margin-top:1.5rem;"></div>
+          </div>
+        </section>
+
+      </main>
+    </div>
+  </div>
+
+  <script>
+    window.RESOLVO_USER = {
+      name: "{{ user.name }}",
+      email: "{{ user.email }}",
+      role: "{{ user.role or 'Customer Support Executive' }}",
+      category: "{{ user.officer_category or '' }}"
+    };
+    window.APPWRITE_CFG = {
+      endpoint: "{{ appwrite.endpoint }}",
+      project: "{{ appwrite.project_id }}",
+      dbId: "{{ appwrite.db_id }}",
+      colId: "{{ appwrite.col_id }}"
+    };
+  </script>
+  <script src="/static/app.js"></script>
+</body>
+</html>

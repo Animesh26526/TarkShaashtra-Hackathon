@@ -1,0 +1,169 @@
+{% extends "base.html" %}
+
+{% block title %}Login | Resolvo{% endblock %}
+
+{% block content %}
+<div class="auth-brand">
+    <div class="brand-icon-lg">R</div>
+    <span class="brand-name-lg">Resolvo</span>
+</div>
+
+<h1>Welcome Back</h1>
+<p class="subtitle">Sign in to your complaint management portal</p>
+
+<form id="login-form">
+    <div class="form-group">
+        <label for="email">Email Address</label>
+        <input type="email" id="email" name="email" placeholder="name@company.com" required>
+    </div>
+    <div class="form-group">
+        <label for="password">Password</label>
+        <input type="password" id="password" name="password" placeholder="••••••••" required>
+    </div>
+    <button type="submit" id="login-btn">Sign In</button>
+</form>
+<div id="login-error" class="form-error" style="display: none;"></div>
+
+<div class="divider"><span>OR</span></div>
+
+<button type="button" onclick="loginWithGoogle()" class="google-btn">
+    <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" width="18" alt="Google">
+    Continue with Google
+</button>
+
+<div class="switch-link" id="switch-link">
+    Don't have an account? <a href="{{ url_for('signup') }}" id="signup-link">Create Account</a>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/appwrite@14.0.0"></script>
+<script>
+    const client = new Appwrite.Client()
+        .setEndpoint('{{ endpoint }}')
+        .setProject('{{ project_id }}');
+    const account = new Appwrite.Account(client);
+
+    // Automatically clear any active Appwrite session when landing on login
+    account.deleteSession('current').catch(() => {});
+
+    document.getElementById('login-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const btn = document.getElementById('login-btn');
+        const errorDiv = document.getElementById('login-error');
+        
+        btn.disabled = true;
+        btn.innerText = 'Signing in...';
+        errorDiv.style.display = 'none';
+
+        const email = document.getElementById('email').value;
+        const password = document.getElementById('password').value;
+
+        try {
+            // 1. Authenticate with Appwrite
+            await account.createEmailPasswordSession(email, password);
+            
+            // 2. Get User Info
+            const user = await account.get();
+            
+            if (!user.emailVerification) {
+                // Not verified! Resend email and block login
+                await account.createVerification('{{ url_for("verify_email", _external=True) }}');
+                await account.deleteSession('current');
+                throw new Error('email_unverified');
+            }
+            
+            // 3. Sync with local database
+            const syncRes = await fetch('/google-finish', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    email: user.email,
+                    name: user.name,
+                    id: user.$id
+                })
+            });
+
+            if (syncRes.ok) {
+                window.location.href = '/app';
+            } else {
+                throw new Error('Local database sync failed.');
+            }
+        } catch (error) {
+            console.error('Login error:', error);
+            
+            const errorMsg = error.message || '';
+            const errorType = error.type || '';
+            
+            if (errorMsg === 'email_unverified') {
+                errorDiv.innerHTML = 'Email not verified. A new verification link has been sent to your inbox.';
+                errorDiv.style.display = 'block';
+                btn.disabled = false;
+                btn.innerText = 'Sign In';
+                return;
+            }
+            
+            // Detect unregistered user and redirect to signup
+            if (errorMsg.includes('Invalid credentials') || 
+                errorMsg.includes('user_not_found') ||
+                errorType === 'user_invalid_credentials' ||
+                errorType === 'user_not_found' ||
+                error.code === 401) {
+                
+                // Check if user exists in Appwrite
+                errorDiv.innerHTML = 'Account not found. <a href="/signup" style="color: var(--primary); font-weight: 700; text-decoration: underline;">Register here →</a>';
+                errorDiv.style.display = 'block';
+                
+                // Highlight the signup link
+                const switchLink = document.getElementById('switch-link');
+                switchLink.style.background = 'var(--primary-pale)';
+                switchLink.style.padding = '12px';
+                switchLink.style.borderRadius = '8px';
+                switchLink.style.border = '1px solid #99f6e4';
+                switchLink.style.fontWeight = '600';
+                
+                btn.disabled = false;
+                btn.innerText = 'Sign In';
+                return;
+            }
+            
+            // Fallback: try local-only login
+            try {
+                const formData = new FormData();
+                formData.append('email', email);
+                formData.append('password', password);
+                
+                const localRes = await fetch('/login', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                if (localRes.redirected) {
+                    window.location.href = localRes.url;
+                    return;
+                }
+            } catch (localErr) {
+                console.error('Local login also failed:', localErr);
+            }
+            
+            errorDiv.innerText = 'Invalid email or password. Please try again or register a new account.';
+            errorDiv.style.display = 'block';
+            btn.disabled = false;
+            btn.innerText = 'Sign In';
+        }
+    });
+
+    function loginWithGoogle() {
+        try {
+            account.createOAuth2Session(
+                'google',
+                '{{ success_url }}',
+                '{{ failure_url }}'
+            );
+        } catch (error) {
+            console.error('Error starting Google OAuth:', error);
+            alert('Failed to start Google login: ' + error.message);
+        }
+    }
+</script>
+{% endblock %}

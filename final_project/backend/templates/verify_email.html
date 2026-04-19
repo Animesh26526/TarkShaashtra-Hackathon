@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+
+{% block title %}Verifying Email | Resolvo{% endblock %}
+
+{% block content %}
+<div style="text-align: center; padding: 40px 0;">
+    <div id="loading-spinner">
+        <div class="loader"></div>
+        <h1>Verifying Your Email...</h1>
+        <p class="subtitle">Just a moment while we confirm your account</p>
+    </div>
+
+    <div id="success-message" style="display: none;">
+        <div class="check-circle">
+            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+        </div>
+        <h1>Email Verified!</h1>
+        <p class="subtitle">Your account is now active.</p>
+        <a href="/login" class="primary-btn" style="display: inline-block; padding: 12px 24px; text-decoration: none; margin-top: 20px;">Back to Login</a>
+    </div>
+
+    <div id="error-message" style="display: none;">
+        <div class="error-circle">
+            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+        </div>
+        <h1>Verification Failed</h1>
+        <p id="error-text" class="subtitle">The verification link is invalid or has expired.</p>
+        <a href="/signup" class="secondary-btn outline" style="display: inline-block; padding: 12px 24px; text-decoration: none; margin-top: 20px;">Try Signing Up Again</a>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/appwrite@14.0.0"></script>
+<script>
+    const urlParams = new URLSearchParams(window.location.search);
+    const userId = urlParams.get('userId');
+    const secret = urlParams.get('secret');
+
+    const client = new Appwrite.Client()
+        .setEndpoint('{{ endpoint }}')
+        .setProject('{{ project_id }}');
+    const account = new Appwrite.Account(client);
+
+    async function verify() {
+        if (!userId || !secret) {
+            showError("Missing verification parameters.");
+            return;
+        }
+        try {
+            await account.updateVerification(userId, secret);
+            const pendingData = localStorage.getItem('pending_signup');
+            if (pendingData) {
+                const userData = JSON.parse(pendingData);
+                const res = await fetch('/google-finish', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        email: userData.email, name: userData.name,
+                        password: userData.password, id: userId,
+                        category: userData.category, employee_id: userData.employee_id
+                    })
+                });
+                if (res.ok) localStorage.removeItem('pending_signup');
+            }
+            showSuccess();
+        } catch (error) {
+            showError(error.message);
+        }
+    }
+
+    function showSuccess() {
+        document.getElementById('loading-spinner').style.display = 'none';
+        document.getElementById('success-message').style.display = 'block';
+    }
+    function showError(text) {
+        document.getElementById('loading-spinner').style.display = 'none';
+        document.getElementById('error-message').style.display = 'block';
+        document.getElementById('error-text').innerText = text;
+    }
+
+    verify();
+</script>
+{% endblock %}

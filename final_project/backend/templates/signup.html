@@ -1,0 +1,122 @@
+{% extends "base.html" %}
+
+{% block title %}Create Account | Resolvo{% endblock %}
+
+{% block content %}
+<div class="auth-brand">
+    <div class="brand-icon-lg">R</div>
+    <span class="brand-name-lg">Resolvo</span>
+</div>
+
+<h1>Create Account</h1>
+<p class="subtitle">Join the complaint resolution platform</p>
+
+<form id="signup-form">
+    <div class="form-group">
+        <label for="name">Full Name</label>
+        <input type="text" id="name" name="name" placeholder="John Doe" required>
+    </div>
+    <div class="form-group">
+        <label for="email">Email Address</label>
+        <input type="email" id="email" name="email" placeholder="john@example.com" required>
+    </div>
+    <div class="form-group">
+        <label for="category">Role / Category</label>
+        <select id="category" name="category" required>
+            <option value="" disabled selected>Select your role</option>
+            <option value="Customer Support Executive">Customer Support Executive</option>
+            <option value="Quality Assurance Team">Quality Assurance Team</option>
+            <option value="Operations Manager">Operations Manager</option>
+        </select>
+    </div>
+    <div class="form-group">
+        <label for="employee_id">Employee ID</label>
+        <input type="text" id="employee_id" name="employee_id" placeholder="EMP-12345" required>
+    </div>
+    <div class="form-group">
+        <label for="password">Password (min 8 characters)</label>
+        <input type="password" id="password" name="password" placeholder="••••••••" minlength="8" required>
+    </div>
+    <button type="submit" id="signup-btn">Create Account</button>
+</form>
+
+<div id="status-message" class="alert alert-success" style="display: none;">
+    ✅ Account created! Verification email sent — please check your inbox.
+</div>
+
+<div class="switch-link">
+    Already have an account? <a href="{{ url_for('login') }}">Sign In</a>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/appwrite@14.0.0"></script>
+<script>
+    const client = new Appwrite.Client()
+        .setEndpoint('{{ endpoint }}')
+        .setProject('{{ project_id }}');
+    const account = new Appwrite.Account(client);
+
+    document.getElementById('signup-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const btn = document.getElementById('signup-btn');
+        btn.disabled = true;
+        btn.innerText = 'Creating Account...';
+
+        const name = document.getElementById('name').value;
+        const email = document.getElementById('email').value;
+        const password = document.getElementById('password').value;
+        const category = document.getElementById('category').value;
+        const employee_id = document.getElementById('employee_id').value;
+
+        try {
+            // Clear any existing sessions
+            try { await account.deleteSession('current'); } catch (err) {}
+
+            // 1. Create Appwrite Account
+            const userId = (Appwrite.ID) ? Appwrite.ID.unique() : 'unique()';
+            let user;
+            try {
+                user = await account.create(userId, email, password, name);
+            } catch (err) {
+                if (err.code === 409) throw new Error('Account already exists. Please login instead.');
+                throw new Error('Account creation failed: ' + err.message);
+            }
+            
+            // 2. Sync with local database
+            fetch('/google-finish', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email, name, password, id: user.$id, category, employee_id })
+            }).catch(syncError => console.warn('Local sync failed:', syncError));
+
+            // 3. Create Session
+            try {
+                await account.createEmailPasswordSession(email, password);
+            } catch (err) {
+                throw new Error('Session creation failed: ' + err.message);
+            }
+
+            // 4. Send Verification Email
+            try {
+                await account.createVerification('{{ verify_url }}');
+            } catch (err) {
+                throw new Error('Verification email failed: ' + err.message);
+            }
+
+            // 5. Store in localStorage for verify page
+            localStorage.setItem('pending_signup', JSON.stringify({
+                name, email, category, employee_id, password
+            }));
+
+            document.getElementById('signup-form').style.display = 'none';
+            document.getElementById('status-message').style.display = 'block';
+        } catch (error) {
+            console.error('Signup Error:', error);
+            alert(error.message);
+            btn.disabled = false;
+            btn.innerText = 'Create Account';
+        }
+    });
+</script>
+{% endblock %}

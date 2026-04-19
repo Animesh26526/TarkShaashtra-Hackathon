@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+
+{% block title %}Authenticating... | Resolvo{% endblock %}
+
+{% block content %}
+<div style="text-align: center; padding: 40px 0;">
+    <div class="loader"></div>
+    <h1>Authenticating...</h1>
+    <p class="subtitle">Please wait while we sync your account</p>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/appwrite@14.0.0"></script>
+<script>
+    const client = new Appwrite.Client()
+        .setEndpoint('{{ endpoint }}')
+        .setProject('{{ project_id }}');
+    const account = new Appwrite.Account(client);
+
+    account.get().then(response => {
+        fetch('/google-finish', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                email: response.email,
+                name: response.name,
+                id: response.$id
+            })
+        }).then(res => {
+            if (res.ok) {
+                window.location.href = '/app';
+            } else {
+                window.location.href = '/login?error=sync_failed';
+            }
+        }).catch(() => {
+            window.location.href = '/login?error=sync_network_error';
+        });
+    }).catch(error => {
+        window.location.href = '/login?error=auth_failed&message=' + encodeURIComponent(error.message);
+    });
+</script>
+{% endblock %}
