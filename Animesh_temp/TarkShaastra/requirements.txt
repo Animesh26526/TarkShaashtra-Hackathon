@@ -1,7 +1,0 @@
-flask
-flask-sqlalchemy
-flask-login
-appwrite
-python-dotenv
-requests
-bcrypt
