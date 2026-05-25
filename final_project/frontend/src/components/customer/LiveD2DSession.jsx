@@ -5,37 +5,99 @@ import { motion } from 'framer-motion';
 const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY || '';
 const WS_URL = `wss://generativelanguage.googleapis.com/ws/google.ai.generativelanguage.v1alpha.GenerativeService.BidiGenerateContent?key=${GEMINI_API_KEY}`;
 
-const LiveD2DSession = ({ onComplaintSubmit }) => {
-  const [status, setStatus] = useState('disconnected'); // disconnected, connecting, connected
+const MOCK_CONVERSATION = [
+  "Resolvo AI: Hello! Thank you for calling Resolvo support. How can I help you today?",
+  "Customer: Hi, I'm calling about batch #402. The seals on the last 5 bottles were loose and leaking in the carton.",
+  "Resolvo AI: I'm very sorry to hear that. Leaking bottles in batch #402 is definitely a quality concern. Could you confirm if the carton itself was wet?",
+  "Customer: Yes, it was completely soaked. It made quite a mess in our storage area.",
+  "Resolvo AI: Understood. I've noted the soak damage. I am registering this as a priority packaging issue. We will initiate a full replacement for that batch immediately."
+];
+
+const LiveD2DSession = ({ onFinish }) => {
+  const [status, setStatus] = useState('disconnected'); // disconnected, connecting, connected, simulated
   const [transcript, setTranscript] = useState('');
-  const [result, setResult] = useState(null);
+  const [isSimulating, setIsSimulating] = useState(false);
 
   const wsRef = useRef(null);
   const audioCtxRef = useRef(null);
   const processorRef = useRef(null);
   const streamRef = useRef(null);
+  const recognitionRef = useRef(null);
   const outputAudioQueue = useRef([]);
   const isPlayingRef = useRef(false);
+  const simIntervalRef = useRef(null);
 
   const [errorMsg, setErrorMsg] = useState('');
 
+  // Local STT to capture user's side
+  const startLocalSTT = () => {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      console.warn("Browser does not support SpeechRecognition. Falling back to AI-only transcript.");
+      return;
+    }
+
+    const recognition = new SpeechRecognition();
+    recognition.continuous = true;
+    recognition.interimResults = false;
+    recognition.lang = 'en-US';
+
+    recognition.onresult = (event) => {
+      let latest = "";
+      for (let i = event.resultIndex; i < event.results.length; ++i) {
+        if (event.results[i].isFinal) {
+          latest += event.results[i][0].transcript;
+        }
+      }
+      if (latest) {
+        setTranscript(prev => prev + (prev ? "\n" : "") + "Customer: " + latest);
+      }
+    };
+
+    try {
+      recognition.start();
+      recognitionRef.current = recognition;
+    } catch (e) {
+      console.error("Local STT failed to start:", e);
+    }
+  };
+
+  const startSimulation = () => {
+    setStatus('simulated');
+    setIsSimulating(true);
+    setTranscript('');
+    setErrorMsg('');
+    
+    let index = 0;
+    simIntervalRef.current = setInterval(() => {
+      if (index < MOCK_CONVERSATION.length) {
+        setTranscript(prev => prev + (prev ? "\n" : "") + MOCK_CONVERSATION[index]);
+        index++;
+      } else {
+        clearInterval(simIntervalRef.current);
+        setTimeout(() => stopSession(true), 1000);
+      }
+    }, 2000);
+  };
+
   const connectToGemini = async () => {
+    if (!GEMINI_API_KEY) {
+      setErrorMsg("No API Key detected. Please provide VITE_GEMINI_API_KEY or use Simulation Mode.");
+      return;
+    }
+
     setStatus('connecting');
     setTranscript('');
-    setResult(null);
     setErrorMsg('');
 
     const ws = new WebSocket(WS_URL);
     wsRef.current = ws;
 
     ws.onopen = () => {
-      // Setup payload for the Live Preview model
       ws.send(JSON.stringify({
         setup: {
           model: "models/gemini-3.1-flash-live-preview",
-          generationConfig: {
-            responseModalities: ["AUDIO"]
-          },
+          generationConfig: { responseModalities: ["AUDIO"] },
           systemInstruction: {
             parts: [{ text: "You are a Resolvo AI Customer Support Agent. You handle live packaged water bottle complaints via audio. Extract the category, sentiment, and priority. Only respond in concise sentences." }]
           }
@@ -52,41 +114,37 @@ const LiveD2DSession = ({ onComplaintSubmit }) => {
         } else {
           data = JSON.parse(event.data);
         }
-      } catch (e) {
-        console.error("Failed to parse", e);
-        return;
-      }
+      } catch (e) { return; }
 
-      // Check if server sent a top-level error before disconnecting
       if (data.error) {
-        setErrorMsg(`API Error: ${data.error.message || JSON.stringify(data.error)}`);
+        setErrorMsg(`API Error: ${data.error.message || "Unauthorized Caller"}`);
+        stopSession();
         return;
       }
 
       if (data.setupComplete) {
         setStatus('connected');
         startMicrophone();
+        startLocalSTT();
       } else if (data.serverContent?.modelTurn) {
         const parts = data.serverContent.modelTurn.parts;
         for (const p of parts) {
-          if (p.text) {
-            setTranscript(prev => prev + " " + p.text);
-          }
-          if (p.inlineData && p.inlineData.data) {
-            queueOutputAudio(p.inlineData.data);
-          }
+          if (p.text) setTranscript(prev => prev + (prev ? "\n" : "") + "Resolvo AI: " + p.text);
+          if (p.inlineData && p.inlineData.data) queueOutputAudio(p.inlineData.data);
         }
       }
     };
 
-    ws.onerror = (e) => {
-      setErrorMsg("WebSocket connection error occurred.");
+    ws.onerror = () => {
+      setErrorMsg("WebSocket connection error. Check your API Key configuration.");
       stopSession();
     };
 
     ws.onclose = (e) => {
-      if (e.code !== 1000) {
-        setErrorMsg(`WebSocket closed ${e.code} ${e.reason ? ': ' + e.reason : ''}`);
+      if (e.code === 1008) {
+        setErrorMsg("Unregistered Caller (1008): Establish identity via VITE_GEMINI_API_KEY.");
+      } else if (e.code !== 1000) {
+        setErrorMsg(`WebSocket disconnected (Code: ${e.code})`);
       }
       stopSession();
     };
@@ -96,10 +154,8 @@ const LiveD2DSession = ({ onComplaintSubmit }) => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: { channelCount: 1, sampleRate: 16000 }});
       streamRef.current = stream;
-
       const audioCtx = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: 16000 });
       audioCtxRef.current = audioCtx;
-
       const source = audioCtx.createMediaStreamSource(stream);
       const processor = audioCtx.createScriptProcessor(4096, 1, 1);
       processorRef.current = processor;
@@ -114,21 +170,15 @@ const LiveD2DSession = ({ onComplaintSubmit }) => {
           }
           const uint8 = new Uint8Array(pcm16.buffer);
           let binary = '';
-          for (let i = 0; i < uint8.byteLength; i++) {
-            binary += String.fromCharCode(uint8[i]);
-          }
-          const b64 = btoa(binary);
-
+          for (let i = 0; i < uint8.byteLength; i++) binary += String.fromCharCode(uint8[i]);
           wsRef.current.send(JSON.stringify({
-            realtimeInput: { audio: { mimeType: "audio/pcm;rate=16000", data: b64 } }
+            realtimeInput: { audio: { mimeType: "audio/pcm;rate=16000", data: btoa(binary) } }
           }));
         }
       };
-
       source.connect(processor);
       processor.connect(audioCtx.destination);
     } catch (e) {
-      console.error("Mic error:", e);
       stopSession();
     }
   };
@@ -140,29 +190,22 @@ const LiveD2DSession = ({ onComplaintSubmit }) => {
       for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
       const int16Array = new Int16Array(bytes.buffer);
       const float32Array = new Float32Array(int16Array.length);
-      for (let i = 0; i < int16Array.length; i++) {
-        float32Array[i] = int16Array[i] / 32768.0;
-      }
+      for (let i = 0; i < int16Array.length; i++) float32Array[i] = int16Array[i] / 32768.0;
 
       const audioCtx = audioCtxRef.current;
       if (!audioCtx) return;
-
-      const audioBuffer = audioCtx.createBuffer(1, float32Array.length, 24000); // Output sample rate is 24kHz for Gemini Gen
+      const audioBuffer = audioCtx.createBuffer(1, float32Array.length, 24000);
       audioBuffer.getChannelData(0).set(float32Array);
       outputAudioQueue.current.push(audioBuffer);
       playNextAudio();
-    } catch (e) {
-      console.error("Audio playback error:", e);
-    }
+    } catch (e) {}
   };
 
   const playNextAudio = () => {
     if (isPlayingRef.current || outputAudioQueue.current.length === 0) return;
     isPlayingRef.current = true;
-
     const audioCtx = audioCtxRef.current;
     if (!audioCtx) return;
-
     const buffer = outputAudioQueue.current.shift();
     const source = audioCtx.createBufferSource();
     source.buffer = buffer;
@@ -174,68 +217,67 @@ const LiveD2DSession = ({ onComplaintSubmit }) => {
     source.start();
   };
 
-  const stopSession = () => {
+  const stopSession = (isAuto = false) => {
     if (wsRef.current) wsRef.current.close();
     if (streamRef.current) streamRef.current.getTracks().forEach(t => t.stop());
     if (processorRef.current) processorRef.current.disconnect();
     if (audioCtxRef.current && audioCtxRef.current.state !== 'closed') audioCtxRef.current.close();
+    if (recognitionRef.current) {
+        try { recognitionRef.current.stop(); } catch(e) {}
+    }
+    if (simIntervalRef.current) clearInterval(simIntervalRef.current);
     setStatus('disconnected');
 
-    // Assume some transcript generated to process
     if (transcript.trim().length > 0) {
-      setResult({
-        transcript: transcript,
-        category: 'Product', // Stub - in a full implementation the model's structure output turns into this
-        priority: 'High',
-        mood: -0.5
-      });
+      onFinish(transcript, isSimulating);
+    } else if (!isAuto) {
+      setErrorMsg("No speech detected. Please check your microphone and try again.");
     }
   };
 
-  useEffect(() => {
-    return () => { stopSession(); };
-  }, []);
+  useEffect(() => { return () => { 
+    if (wsRef.current) wsRef.current.close();
+    if (simIntervalRef.current) clearInterval(simIntervalRef.current);
+    if (recognitionRef.current) recognitionRef.current.stop();
+  }; }, []);
 
   return (
     <div className="hackathon-live-wrapper">
-      {!result ? (
-        <div className="audio-control-panel">
-          <h2 style={{margin:0, color:'var(--primary)'}}>gemini-3.1-flash-live Bidi WebSocket API</h2>
-          
-          <div className="status-header">
-            {errorMsg && <div style={{color:'red', marginBottom:'0.5rem'}}>{errorMsg}</div>}
-            {status === 'disconnected' && <span>Ready to open WebSockets</span>}
-            {status === 'connecting' && <span className="processing"><Loader2 size={16} className="spin" /> Connecting to Gemini Live...</span>}
-            {status === 'connected' && <span className="pulsing-record"><span className="dot"></span> Live Bidi Stream Active</span>}
-          </div>
+      <div className="audio-control-panel">
+        <div style={{display:'flex', justifyContent:'space-between', width:'100%', alignItems:'center'}}>
+          <h2 style={{margin:0, color:'var(--primary)'}}>{isSimulating ? 'Simulated AI Call' : 'Gemini 3.1 Live Audio'}</h2>
+          {isSimulating && <span className="badge" style={{background:'#fef3c7', color:'#92400e', border:'1px solid #f59e0b'}}>SIMULATION MODE</span>}
+        </div>
+        
+        <div className="status-header">
+          {errorMsg && <div style={{color:'#ef4444', marginBottom:'0.5rem', fontWeight:500}}>{errorMsg}</div>}
+          {status === 'disconnected' && <span>Ready to start support session</span>}
+          {status === 'connecting' && <span className="processing"><Loader2 size={16} className="spin" /> Connecting...</span>}
+          {status === 'connected' && <span className="pulsing-record"><span className="dot"></span> Live Bidi Stream Active</span>}
+          {status === 'simulated' && <span className="pulsing-record" style={{color:'#9333ea'}}><span className="dot" style={{background:'#9333ea'}}></span> Generating Mock Transcript...</span>}
+        </div>
 
-          <div className="controls">
-            {status === 'disconnected' ? (
-              <button className="btn-circle start-btn" onClick={connectToGemini}><Mic size={24} /></button>
-            ) : (
-              <button className="btn-circle stop-btn" onClick={stopSession}><StopCircle size={24} /></button>
-            )}
-          </div>
-
-          {status === 'connected' && (
-            <div style={{ width: '100%', marginTop: '1rem', background:'#f8fafc', padding:'1rem', borderRadius:'8px' }}>
-              <p style={{marginBottom: '0.5rem', fontWeight:'600', color:'var(--text-muted)'}}>Live AI Transcript:</p>
-              <p>{transcript || "Speak to start streaming PCM..."}</p>
+        <div className="controls">
+          {status === 'disconnected' ? (
+            <div style={{display:'flex', gap:'1rem'}}>
+              <button className="btn-circle start-btn" title="Start Live Audio" onClick={connectToGemini}><Mic size={24} /></button>
+              <button className="btn-circle" style={{background:'#9333ea'}} title="Run Simulation" onClick={startSimulation}><Activity size={24} /></button>
             </div>
+          ) : (
+            <button className="btn-circle stop-btn" onClick={() => stopSession(false)}><StopCircle size={24} /></button>
           )}
         </div>
-      ) : (
-        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="audio-result-panel">
-          <h3><Activity size={18} /> Call Concluded</h3>
-          <p><strong>Transcript:</strong> {result.transcript}</p>
-          <button className="btn btn-primary" onClick={() => onComplaintSubmit({
-            type: 'Audio', category: result.category, priority: result.priority, description: result.transcript
-          })}>Finalize Log</button>
-        </motion.div>
-      )}
+
+        {(status === 'connected' || status === 'simulated') && (
+          <div style={{ width: '100%', marginTop: '1rem', background:'#f8fafc', padding:'1rem', borderRadius:'8px', border:'1px solid var(--border)' }}>
+            <p style={{marginBottom: '0.5rem', fontWeight:'600', color:'var(--text-muted)', fontSize:'0.75rem', textTransform:'uppercase'}}>Transcript Feed:</p>
+            <p style={{whiteSpace:'pre-wrap', fontSize:'0.95rem', lineHeight:1.5}}>{transcript || "Waiting for audio input..."}</p>
+          </div>
+        )}
+      </div>
 
       <style>{`
-        .hackathon-live-wrapper { padding: 1rem; width: 100%; max-width: 700px; margin: 0 auto; display: flex; flex-direction: column; gap: 1.5rem; }
+        .hackathon-live-wrapper { padding: 1rem; width: 100%; max-width: 700px; margin: 0 auto; display: flex; flexDirection: column; gap: 1.5rem; }
         .audio-control-panel { display: flex; flex-direction: column; align-items: center; gap: 1.5rem; background: #fff; padding: 2rem; border-radius: var(--radius-lg); border: 1px solid var(--border); box-shadow: var(--shadow-sm); }
         .status-header { text-align: center; font-weight: 600; color: var(--text-muted); font-size: 0.9rem; min-height: 24px; }
         .pulsing-record { color: var(--success); display: flex; align-items: center; gap: 0.5rem; justify-content:center; }
@@ -246,7 +288,6 @@ const LiveD2DSession = ({ onComplaintSubmit }) => {
         .btn-circle { width: 64px; height: 64px; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: none; cursor: pointer; color: white; transition: all 0.2s; }
         .start-btn { background: var(--primary); }
         .stop-btn { background: var(--danger); animation: breathe 2s infinite; }
-        .audio-result-panel { background: white; padding: 2rem; border-radius: var(--radius-lg); border: 1px solid var(--border); }
         @keyframes pulse { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.5; transform: scale(0.8); } }
         @keyframes breathe { 0%, 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); } 50% { box-shadow: 0 0 0 15px rgba(239, 68, 68, 0); } }
         @keyframes spin { to { transform: rotate(360deg); } }

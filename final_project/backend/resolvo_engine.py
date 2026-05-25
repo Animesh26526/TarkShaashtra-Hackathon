@@ -154,17 +154,20 @@ def get_confidence(text=''):
     Return a confidence score based on keyword match density.
     Higher density = higher confidence.
     """
-    if not text:
-        return f"{random.randint(85, 96)}%"
+    if not text or len(text.strip()) < 10:
+        return "75%"
 
     total_matches = 0
+    total_weight = 0
     for keywords in CATEGORY_KEYWORDS.values():
-        _, matches = _score_keywords(text, keywords)
+        weight, matches = _score_keywords(text, keywords)
         total_matches += matches
+        total_weight += weight
 
-    # Base confidence 75%, each keyword match adds up to 3%
-    base = 75
-    bonus = min(total_matches * 3, 22)
+    # Base confidence 70%, each keyword match adds value
+    # Up to 98% max
+    base = 70
+    bonus = min((total_matches * 5) + (total_weight * 2), 28)
     return f"{base + bonus}%"
 
 

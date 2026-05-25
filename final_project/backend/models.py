@@ -1,6 +1,9 @@
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import UserMixin
-from datetime import datetime
+from datetime import datetime, timezone, timedelta
+
+# Indian Standard Time (UTC+5:30)
+IST = timezone(timedelta(hours=5, minutes=30))
 
 db = SQLAlchemy()
 
@@ -14,7 +17,7 @@ class User(db.Model, UserMixin):
     password = db.Column(db.String(200), nullable=True)
     google_id = db.Column(db.String(100), unique=True, nullable=True)
     role = db.Column(db.String(50), default='Customer Support Executive')
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(IST))
 
     complaints = db.relationship('Complaint', backref='user', lazy=True)
 
@@ -23,7 +26,8 @@ class User(db.Model, UserMixin):
 
 
 class Complaint(db.Model):
-    id = db.Column(db.String(20), primary_key=True)
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    custom_id = db.Column(db.String(20), unique=True, nullable=True) # For CMP-001 format
     title = db.Column(db.String(200), nullable=False)
     description = db.Column(db.Text, nullable=True)
     category = db.Column(db.String(50), nullable=True)         # Product / Packaging / Trade
@@ -36,7 +40,7 @@ class Complaint(db.Model):
     resolution_explanation = db.Column(db.Text, nullable=True)
     confidence = db.Column(db.String(10), nullable=True)
     sla_deadline = db.Column(db.DateTime, nullable=True)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(IST))
     resolved_at = db.Column(db.DateTime, nullable=True)
     resolution_time = db.Column(db.Integer, nullable=True)      # Hours to resolve (from sample data)
     complaint_type = db.Column(db.String(20), default='Text')   # Text / Email / Call / Audio
@@ -49,8 +53,9 @@ class Complaint(db.Model):
     appwrite_synced = db.Column(db.Boolean, default=False)
 
     def to_dict(self):
+        display_id = self.custom_id if self.custom_id else str(self.id)
         return {
-            'id': self.id,
+            'id': display_id,
             'title': self.title,
             'description': self.description,
             'category': self.category,

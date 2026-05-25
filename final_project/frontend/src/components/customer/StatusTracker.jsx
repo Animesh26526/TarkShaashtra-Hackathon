@@ -7,7 +7,13 @@ const StatusTracker = ({ status, deadline, createdAt }) => {
 
   useEffect(() => {
     const calculateTimeLeft = () => {
-      const difference = new Date(deadline) - new Date();
+      const deadlineDate = new Date(deadline);
+      
+      if (isNaN(deadlineDate.getTime())) {
+        return "SLA Pending";
+      }
+
+      const difference = deadlineDate - new Date();
       if (difference <= 0) {
         return "SLA Breached";
       }
@@ -72,7 +78,7 @@ const StatusTracker = ({ status, deadline, createdAt }) => {
       
       <div className="footer-info">
         <Timer size={12} />
-        <span>Case opened on {new Date(createdAt).toLocaleDateString()} at {new Date(createdAt).toLocaleTimeString()}</span>
+        <span>Case opened on {new Date(createdAt).toLocaleDateString()} at {new Date(createdAt).toLocaleTimeString()} (IST)</span>
       </div>
 
       <style>{`

@@ -17,10 +17,9 @@ import { useApp, ROLES } from '../context/AppContext';
 import { useAuth } from '../context/AuthContext';
 
 const Sidebar = () => {
-  const { userRole, setUserRole } = useApp();
+  const { userRole } = useApp();
   const { user, logout } = useAuth();
   const navigate = useNavigate();
-  const [showAccountSwitch, setShowAccountSwitch] = useState(false);
 
   const navItems = [
     // Operations Manager
@@ -64,25 +63,16 @@ const Sidebar = () => {
       </nav>
 
       <div className="sidebar-footer">
-        <div style={{ position: 'relative' }}>
-          <div className="user-profile" onClick={() => setShowAccountSwitch(!showAccountSwitch)} style={{ cursor: 'pointer' }}>
+        <div>
+          <div className="user-profile">
             <div className="avatar">
               <User size={18} />
             </div>
             <div className="user-info">
-              <p className="user-name">{user?.name || userRole}</p>
-              <p className="user-status">Online</p>
+              <p className="user-name">{user?.name || 'User'}</p>
+              <p className="user-status">{userRole}</p>
             </div>
           </div>
-          
-          {showAccountSwitch && (
-            <div className="account-switch-popup card">
-              <div className="popup-header">Switch Account</div>
-              <div className="account-option" onClick={() => { setUserRole(ROLES.EXECUTIVE); setShowAccountSwitch(false); }}>Support Executive</div>
-              <div className="account-option" onClick={() => { setUserRole(ROLES.QA); setShowAccountSwitch(false); }}>QA Team</div>
-              <div className="account-option" onClick={() => { setUserRole(ROLES.MANAGER); setShowAccountSwitch(false); }}>Operations Manager</div>
-            </div>
-          )}
         </div>
         
         <button className="logout-btn" style={{ marginTop: '0.5rem' }} onClick={async () => {

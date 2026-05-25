@@ -1,14 +1,18 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { MessageSquare, Mail, Phone, Users, Send, AlertTriangle, CheckCircle, RefreshCw, Bot, User, PhoneCall, Delete } from 'lucide-react';
+import { MessageSquare, Mail, Phone, Users, Send, AlertTriangle, CheckCircle, RefreshCw, Bot, User, PhoneCall, Delete, Save, Activity } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import LiveD2DSession from '../components/customer/LiveD2DSession';
 import AgenticMode from '../components/customer/AgenticMode';
 
 const SubmitComplaint = () => {
-  const { generateAIResponse, addComplaint } = useApp();
-  const [view, setView] = useState('selection'); // selection, text_init, text_chat, email, call, live
+  const { generateAIResponse, addComplaint, updateComplaintStatus, escalateComplaint } = useApp();
+  const [view, setView] = useState('selection'); // selection, text_init, text_chat, email, call, live, live_review
   const [sessionComplaint, setSessionComplaint] = useState(null);
+
+  // Live Audio State
+  const [liveTranscript, setLiveTranscript] = useState('');
+  const [isLiveSimulated, setIsLiveSimulated] = useState(false);
 
   // Text Flow State
   const [directDesc, setDirectDesc] = useState('');
@@ -26,17 +30,33 @@ const SubmitComplaint = () => {
     if (!directDesc.trim()) return;
     setIsTyping(true);
     
-    // Initial complaint creation (ID generation)
-    const c = await addComplaint({
-      type: 'Text', title: 'Direct Issue', description: directDesc
-    });
-    setSessionComplaint(c);
-    
-    setChatMessages([
-      { role: 'assistant', content: `Complaint ${c.id} logged. How else can I help resolve this issue?` }
-    ]);
-    setView('text_chat');
-    setIsTyping(false);
+    try {
+      const c = await addComplaint({
+        type: 'Text', title: 'Direct Issue', description: directDesc
+      });
+      setSessionComplaint(c);
+      
+      // Get AI to generate a contextual welcome message instead of hardcoding
+      const aiResult = await generateAIResponse({ 
+        description: directDesc,
+        history: [{ role: 'user', content: directDesc }] 
+      });
+
+      setChatMessages([
+        { role: 'user', content: directDesc },
+        { 
+          role: 'assistant', 
+          content: aiResult.response,
+          isEscalated: aiResult.isEscalated,
+          isResolved: aiResult.isResolved
+        }
+      ]);
+      setView('text_chat');
+    } catch (err) {
+      alert('Failed to log complaint');
+    } finally {
+      setIsTyping(false);
+    }
   };
 
   const handleSendChat = async () => {
@@ -50,12 +70,76 @@ const SubmitComplaint = () => {
     try {
       const aiResult = await generateAIResponse({ body: userMsg.content, history });
       setChatMessages(prev => [...prev, { 
-        role: 'assistant', content: aiResult.response, isEscalated: aiResult.isEscalated 
+        role: 'assistant', content: aiResult.response, isEscalated: aiResult.isEscalated, isResolved: aiResult.isResolved
       }]);
+
+      if (aiResult.isEscalated && sessionComplaint) {
+        await escalateComplaint(sessionComplaint.id);
+      } else if (aiResult.isResolved && sessionComplaint) {
+        await updateComplaintStatus(sessionComplaint.id, 'Resolved');
+      }
     } catch(e) {
       setChatMessages(prev => [...prev, { role: 'assistant', content: 'System error' }]);
     }
     setIsTyping(false);
+  };
+
+  // Email State
+  const [emailSubject, setEmailSubject] = useState('');
+  const [emailBody, setEmailBody] = useState('');
+  const [emailDraft, setEmailDraft] = useState('');
+  const [isDrafting, setIsDrafting] = useState(false);
+
+  const handleEmailDraft = async () => {
+    if (!emailBody.trim()) return;
+    setIsDrafting(true);
+    try {
+      const res = await fetch('/api/ai/draft-email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ subject: emailSubject, body: emailBody })
+      });
+      const data = await res.json();
+      setEmailDraft(data.draft || 'Error generating draft.');
+    } catch (e) {
+      setEmailDraft('Failed to connect to AI server.');
+    } finally {
+      setIsDrafting(false);
+    }
+  };
+
+  const handleEmailSubmit = async () => {
+    if (!emailBody.trim()) return;
+    try {
+      const c = await addComplaint({
+        type: 'Email',
+        title: `Email: ${emailSubject || 'Untitled'}`,
+        description: `Customer Message: ${emailBody}\n\nAI Recommended Reply: ${emailDraft}`,
+        emailSubject: emailSubject
+      });
+      alert(`Complaint logged successfully: ${c.id}`);
+      window.location.href = '/complaints';
+    } catch (e) {
+      alert('Failed to log email complaint.');
+    }
+  };
+
+  const handleManualResolve = async () => {
+    if (!sessionComplaint) return;
+    if (window.confirm('Mark this case as resolved?')) {
+      await updateComplaintStatus(sessionComplaint.id, 'Resolved');
+      alert('Case resolved successfully.');
+      setView('selection');
+    }
+  };
+
+  const handleManualEscalate = async () => {
+    if (!sessionComplaint) return;
+    if (window.confirm('Escalate this case to a human manager?')) {
+      await escalateComplaint(sessionComplaint.id);
+      alert('Case escalated. A manager will review it shortly.');
+      setView('selection');
+    }
   };
 
   // Dial Pad State
@@ -74,13 +158,36 @@ const SubmitComplaint = () => {
         body: JSON.stringify({ digits: dialNumber })
       });
       const data = await res.json();
+      if (data.error) throw new Error(data.error);
+      
       setCallResponse(data.reply || 'System Error');
-      // Create a complaint for the call
-      await addComplaint({ type: 'Call', title: `Call to ${dialNumber}`, description: data.reply });
+      await addComplaint({ type: 'Call', title: `Call to ${dialNumber}`, description: data.reply, phoneNumber: dialNumber });
     } catch (e) {
-      setCallResponse('Failed to connect call.');
+      setCallResponse(e.message || 'Failed to connect call.');
     }
     setIsCalling(false);
+  };
+
+  const handleLiveFinish = (transcript, isSimulated) => {
+    setLiveTranscript(transcript);
+    setIsLiveSimulated(isSimulated);
+    setView('live_review');
+  };
+
+  const handleLiveRegister = async () => {
+    try {
+      const c = await addComplaint({
+        type: 'Audio',
+        title: `Live Audio - ${new Date().toLocaleTimeString()}`,
+        description: `TRANSCRIPT:\n${liveTranscript}`,
+        category: liveTranscript.toLowerCase().includes('packaging') ? 'Packaging' : 'Product',
+        priority: 'High'
+      });
+      alert(`Complaint Registered! ID: ${c.id}`);
+      window.location.href = '/complaints';
+    } catch (e) {
+      alert('Registration failed.');
+    }
   };
 
   return (
@@ -90,7 +197,7 @@ const SubmitComplaint = () => {
           <h1>Receive Complaint</h1>
           <p style={{color:'var(--text-muted)'}}>Select the channel to interact and document the customer issue.</p>
         </div>
-        {view !== 'selection' && (
+        {(view !== 'selection' && view !== 'live_review') && (
           <button className="btn btn-outline" onClick={() => { setView('selection'); setSessionComplaint(null); }}>
             &larr; Back to Channels
           </button>
@@ -153,7 +260,8 @@ const SubmitComplaint = () => {
             <div style={{padding:'1rem', borderBottom:'1px solid var(--border)', display:'flex', justifyContent:'space-between', alignItems:'center'}}>
               <div style={{display:'flex', gap:'1rem', alignItems:'center'}}>
                 <span className="badge" style={{background:'var(--primary)', color:'white'}}>Tracking: {sessionComplaint?.id}</span>
-                <span className="badge priority-high" style={{cursor:'pointer'}} onClick={() => alert('Connecting to a human agent... Please wait.')}>Escalate to Human</span>
+                <span className="badge priority-high" style={{cursor:'pointer'}} onClick={handleManualEscalate}>Escalate to Human</span>
+                <span className="badge" style={{background:'var(--success)', color:'white', cursor:'pointer'}} onClick={handleManualResolve}>Mark Resolved</span>
                 <span className="badge" style={{background:'#e2e8f0', color:'#1e293b', cursor:'pointer'}} onClick={()=>setView('selection')}>Close Case</span>
               </div>
             </div>
@@ -188,17 +296,27 @@ const SubmitComplaint = () => {
               <div className="card" style={{flex:1}}>
                 <h3 style={{marginBottom:'1rem', paddingBottom:'0.5rem', borderBottom:'1px solid var(--border)'}}>Compose Email</h3>
                 <div style={{display:'flex', flexDirection:'column', gap:'1rem'}}>
-                  <div><label style={{fontSize:'0.8rem', fontWeight:600}}>To:</label><input type="text" style={{width:'100%', padding:'0.5rem', border:'1px solid var(--border)'}} placeholder="Customer Email" /></div>
-                  <div><label style={{fontSize:'0.8rem', fontWeight:600}}>Subject:</label><input type="text" style={{width:'100%', padding:'0.5rem', border:'1px solid var(--border)'}} placeholder="Subject" /></div>
-                  <textarea placeholder="Describe issue or reply..." rows={8} style={{width:'100%', padding:'0.5rem', border:'1px solid var(--border)'}}></textarea>
-                  <button className="btn btn-outline" style={{width:'fit-content'}}>Draft with AI</button>
+                  <div><label style={{fontSize:'0.8rem', fontWeight:600}}>Subject:</label><input type="text" value={emailSubject} onChange={e=>setEmailSubject(e.target.value)} style={{width:'100%', padding:'0.5rem', border:'1px solid var(--border)', borderRadius:'4px'}} placeholder="Email Subject" /></div>
+                  <textarea value={emailBody} onChange={e=>setEmailBody(e.target.value)} placeholder="Describe the customer issue..." rows={8} style={{width:'100%', padding:'0.5rem', border:'1px solid var(--border)', borderRadius:'4px'}}></textarea>
+                  <div style={{display:'flex', gap:'1rem'}}>
+                    <button className="btn btn-outline" onClick={handleEmailDraft} disabled={isDrafting}>
+                      {isDrafting ? 'Drafting...' : 'Draft with AI'}
+                    </button>
+                    <button className="btn btn-primary" onClick={handleEmailSubmit}>
+                      <Save size={18}/> Log Complaint
+                    </button>
+                  </div>
                 </div>
               </div>
               <div className="card" style={{flex:1, background:'#f8fafc'}}>
                 <h3 style={{marginBottom:'1rem', paddingBottom:'0.5rem', borderBottom:'1px solid var(--border)'}}>AI-Generated Draft</h3>
-                <div style={{color:'var(--text-muted)', textAlign:'center', marginTop:'3rem'}}>
-                  <Bot size={48} style={{margin:'0 auto 1rem', opacity:0.5}}/>
-                  <p>AI Draft Assistant</p>
+                <div style={{color:'var(--text-main)', fontSize:'0.9rem', whiteSpace:'pre-wrap'}}>
+                  {emailDraft ? emailDraft : (
+                    <div style={{textAlign:'center', marginTop:'3rem', color:'var(--text-muted)'}}>
+                      <Bot size={48} style={{margin:'0 auto 1rem', opacity:0.5}}/>
+                      <p>Draft response will appear here.</p>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
@@ -236,19 +354,51 @@ const SubmitComplaint = () => {
         )}
 
         {view === 'live' && (
-          <motion.div key="live" initial={{y:20, opacity:0}} animate={{y:0, opacity:1}} exit={{opacity:0}}>
-             <LiveD2DSession onComplaintSubmit={async (d) => {
-               const c = await addComplaint(d);
-               setSessionComplaint(c);
-             }} />
+          <motion.div key="live" initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}}>
+             <LiveD2DSession onFinish={handleLiveFinish} />
+          </motion.div>
+        )}
+
+        {view === 'live_review' && (
+          <motion.div key="live_review" initial={{y:20, opacity:0}} animate={{y:0, opacity:1}} className="card" style={{maxWidth:'700px', margin:'0 auto'}}>
+            <div style={{display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:'1.5rem'}}>
+               <h2 style={{margin:0}}><Activity size={20} color="var(--primary)" /> Review & Register</h2>
+               <span className="badge priority-high">Priority: High</span>
+            </div>
+            
+            <div style={{background:'#eff6ff', border:'1px solid #bfdbfe', padding:'1rem', borderRadius:'8px', marginBottom:'1.5rem'}}>
+              <p style={{color:'#1e40af', fontWeight:600, fontSize:'0.85rem'}}>Session Captured!</p>
+              <p style={{color:'#1e40af', fontSize:'0.8rem', margin:0}}>Please review the transcript below. If everything is correct, click "Register Formal Complaint" to persist this to the management dashboard.</p>
+            </div>
+
+            <div style={{marginBottom:'2rem'}}>
+              <p style={{fontSize:'0.8rem', fontWeight:700, color:'var(--text-muted)', textTransform:'uppercase', marginBottom:'0.5rem'}}>Full Session Transcript</p>
+              <div style={{background:'#f8fafc', padding:'1.25rem', borderRadius:'8px', border:'1px solid var(--border)', maxHeight:'300px', overflowY:'auto'}}>
+                <p style={{fontSize:'0.95rem', color:'#1e293b', lineHeight:1.6, whiteSpace:'pre-wrap'}}>{liveTranscript}</p>
+              </div>
+            </div>
+
+            <div style={{display:'flex', gap:'1rem'}}>
+              <button className="btn btn-primary" style={{flex:1}} onClick={handleLiveRegister}>Register Formal Complaint</button>
+              <button className="btn btn-outline" style={{flex:1}} onClick={() => setView('live')}>Retake Recording</button>
+            </div>
           </motion.div>
         )}
 
         {view === 'agentic' && (
           <motion.div key="agentic" initial={{y:20, opacity:0}} animate={{y:0, opacity:1}} exit={{opacity:0}}>
              <AgenticMode onContinueAsText={(data) => {
-               setDirectDesc(data.description || data.title || '');
-               setView('text_init');
+               // Prevent duplicate creation: Use the ID from agentic result if available
+               if (data.complaint && data.complaint.id) {
+                 setSessionComplaint(data.complaint);
+                 setChatMessages([
+                   { role: 'assistant', content: `Troubleshooting guide generated for ${data.complaint.id}. How else can I help?` }
+                 ]);
+                 setView('text_chat');
+               } else {
+                 setDirectDesc(data.description || data.title || '');
+                 setView('text_init');
+               }
              }} />
           </motion.div>
         )}

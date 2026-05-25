@@ -24,11 +24,11 @@ from appwrite.permission import Permission
 from appwrite.role import Role
 from appwrite.input_file import InputFile
 
-APPWRITE_ENDPOINT = os.getenv('APPWRITE_ENDPOINT', 'https://sgp.cloud.appwrite.io/v1')
-APPWRITE_PROJECT_ID = os.getenv('APPWRITE_PROJECT_ID', '69e34dd9002fef599d7d')
+APPWRITE_ENDPOINT = os.getenv('APPWRITE_ENDPOINT', '')
+APPWRITE_PROJECT_ID = os.getenv('APPWRITE_PROJECT_ID', '')
 APPWRITE_API_KEY = os.getenv('APPWRITE_API_KEY', '')
-APPWRITE_DB_ID = os.getenv('APPWRITE_DB_ID', '69e358ca00268f874126')
-APPWRITE_COL_ID = os.getenv('APPWRITE_COL_ID', '69e358cd00179dcf5bb7')
+APPWRITE_DB_ID = os.getenv('APPWRITE_DB_ID', '')
+APPWRITE_COL_ID = os.getenv('APPWRITE_COL_ID', '')
 APPWRITE_BUCKET_ID = os.getenv('APPWRITE_BUCKET_ID', 'resolvo_images')
 
 client = Client()
@@ -53,10 +53,10 @@ def ensure_bucket_exists():
                 bucket_id=APPWRITE_BUCKET_ID,
                 name='Resolvo Images',
                 permissions=[
-                    Permission.read(Role.any()),
-                    Permission.create(Role.any()),
-                    Permission.update(Role.any()),
-                    Permission.delete(Role.any()),
+                    Permission.read(Role.users()),
+                    Permission.create(Role.users()),
+                    Permission.update(Role.users()),
+                    Permission.delete(Role.users()),
                 ],
                 file_security=False,
                 maximum_file_size=10485760,
@@ -82,7 +82,7 @@ def upload_image(image_base64, filename='complaint_image.jpg'):
             bucket_id=APPWRITE_BUCKET_ID,
             file_id=file_id,
             file=InputFile.from_bytes(image_bytes, filename),
-            permissions=[Permission.read(Role.any())]
+            permissions=[Permission.read(Role.users())]
         )
         fid = result['$id'] if isinstance(result, dict) else result.id
         url = f"{APPWRITE_ENDPOINT}/storage/buckets/{APPWRITE_BUCKET_ID}/files/{fid}/view?project={APPWRITE_PROJECT_ID}"
@@ -120,6 +120,7 @@ def sync_complaint_to_appwrite(complaint_dict, image_base64=None):
             'resolution_time': int(complaint_dict.get('resolutionTime') or complaint_dict.get('resolution_time') or 0),
             'status': str(complaint_dict.get('status', 'Open'))[:20],
             'image_url': image_url,
+            'sla_deadline': str(complaint_dict.get('slaDeadline') or complaint_dict.get('sla_deadline') or ''),
         }
 
         result = tables_db.create_row(
@@ -128,9 +129,9 @@ def sync_complaint_to_appwrite(complaint_dict, image_base64=None):
             row_id=ID.unique(),
             data=row_data,
             permissions=[
-                Permission.read(Role.any()),
-                Permission.update(Role.any()),
-                Permission.delete(Role.any()),
+                Permission.read(Role.users()),
+                Permission.update(Role.users()),
+                Permission.delete(Role.users()),
             ]
         )
         row_id = result.id if hasattr(result, 'id') else result['$id']
@@ -166,17 +167,27 @@ def fetch_complaints_from_appwrite(limit=100):
         return []
 
 
-def delete_complaint_from_appwrite(row_id):
-    """Delete a complaint row from Appwrite."""
+def delete_complaint_from_appwrite(complaint_id):
+    """Delete a complaint row from Appwrite using its complaint_id."""
     try:
-        tables_db.delete_row(
+        result = tables_db.list_rows(
             database_id=APPWRITE_DB_ID,
             table_id=APPWRITE_COL_ID,
-            row_id=row_id,
+            queries=[Query.equal('complaint_id', str(complaint_id))]
         )
+        for row in result.rows:
+            d = row.to_dict()
+            row_id = d.get('$id')
+            if row_id:
+                tables_db.delete_row(
+                    database_id=APPWRITE_DB_ID,
+                    table_id=APPWRITE_COL_ID,
+                    row_id=row_id,
+                )
+        print(f"[Appwrite] Deleted complaint {complaint_id}")
         return True
     except Exception as e:
-        print(f"[Appwrite] Delete failed: {e}")
+        print(f"[Appwrite] Delete failed for {complaint_id}: {e}")
         return False
 
 

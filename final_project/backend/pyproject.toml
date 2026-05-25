@@ -1,0 +1,25 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "resolvo-backend"
+version = "0.1.0"
+description = "Resolvo - AI-Powered Complaint Classification & Resolution System Backend"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "flask",
+    "flask-sqlalchemy",
+    "flask-login",
+    "flask-cors",
+    "python-dotenv",
+    "google-genai",
+    "werkzeug",
+    "reportlab",
+    "appwrite",
+    "google-generativeai>=0.8.6",
+]
+
+[tool.setuptools]
+py-modules = ["app", "models", "resolvo_engine", "appwrite_sync"]

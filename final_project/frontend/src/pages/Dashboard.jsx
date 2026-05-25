@@ -11,7 +11,6 @@ import { useApp } from '../context/AppContext';
 
 const Dashboard = () => {
   const { complaints, stats, fetchStats } = useApp();
-  const [liveStats, setLiveStats] = useState(null);
 
   useEffect(() => {
     fetchStats();
@@ -34,12 +33,30 @@ const Dashboard = () => {
   ];
 
   // Generate resolution time data from actual complaints
+  // Include both Resolved (actual time) and Open (current age)
   const resolutionData = complaints
-    .filter(c => c.resolutionTime)
-    .slice(0, 15)
-    .map(c => ({ name: c.id, hours: c.resolutionTime }));
+    .slice(0, 30) // Show more items
+    .map(c => {
+      let hours = 0;
+      if (c.status === 'Resolved' && c.resolutionTime !== null) {
+        hours = Number(c.resolutionTime);
+      } else {
+        // Calculate age for Open/In Progress cases
+        const created = new Date(c.createdAt);
+        const diff = new Date() - created;
+        hours = Math.floor(Math.max(0, diff / (1000 * 60 * 60)));
+      }
 
-  const COLORS = ['#1d4ed8', '#0ea5e9', '#6366f1'];
+      return { 
+        name: c.id, 
+        actualHours: hours,
+        status: c.status,
+        // Use displayHours for height visibility (min 5 for 0h cases to be visible)
+        displayHours: Math.max(hours, 5) 
+      };
+    });
+
+  const COLORS = ['#2563eb', '#0ea5e9', '#6366f1'];
   const PRIORITY_COLORS = { High: '#ef4444', Medium: '#f59e0b', Low: '#10b981' };
 
   const statCards = [
@@ -62,7 +79,7 @@ const Dashboard = () => {
         </div>
         <div className="time-filter">
           <TrendingUp size={16} />
-          <span>Live Data</span>
+          <span>Live Data (IST)</span>
         </div>
       </div>
 
@@ -87,25 +104,45 @@ const Dashboard = () => {
       <div className="charts-grid">
         <div className="card chart-card wide">
           <div className="chart-header">
-            <h3>Resolution Time by Complaint</h3>
-            <p>Hours to resolve each complaint.</p>
+            <h3>Case Lifecycle Analysis (IST)</h3>
+            <p>Hours elapsed for Open cases vs. final Resolution time.</p>
           </div>
-          <div className="chart-container">
-            <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={resolutionData.length ? resolutionData : [{ name: '--', hours: 0 }]}>
+          <div className="chart-container" style={{ height: '350px', width: '100%', marginTop: '1rem' }}>
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={resolutionData.length ? resolutionData : [{ name: 'No Data', displayHours: 0 }]}>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fill: '#64748b', fontSize: 11}} dy={10} />
-                <YAxis axisLine={false} tickLine={false} tick={{fill: '#64748b', fontSize: 12}} />
+                <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fill: '#64748b', fontSize: 10}} dy={10} />
+                <YAxis axisLine={false} tickLine={false} tick={{fill: '#64748b', fontSize: 12}} label={{ value: 'Hours', angle: -90, position: 'insideLeft', offset: 0, fill: '#64748b', fontSize: 12 }} />
                 <Tooltip 
-                  contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+                  cursor={{fill: '#f8fafc'}}
+                  formatter={(value, name, props) => {
+                    const label = props.payload.status === 'Resolved' ? 'Final Resolution' : 'Current Age';
+                    return [`${props.payload.actualHours} hours`, label];
+                  }}
+                  contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
                 />
-                <Bar dataKey="hours" radius={[6, 6, 0, 0]} barSize={24}>
-                  {resolutionData.map((entry, index) => (
-                    <Cell key={index} fill={entry.hours > 48 ? '#fecdd3' : entry.hours > 24 ? '#fde68a' : '#bfdbfe'} />
-                  ))}
+                <Bar dataKey="displayHours" radius={[6, 6, 0, 0]} barSize={35}>
+                  {resolutionData.map((entry, index) => {
+                    let barColor = '#3b82f6'; // Default Blue
+                    if (entry.actualHours > 48) barColor = '#ef4444'; // Red
+                    else if (entry.actualHours > 24) barColor = '#f59e0b'; // Amber
+                    
+                    return (
+                      <Cell 
+                        key={`res-cell-${index}`} 
+                        fill={barColor} 
+                        fillOpacity={1}
+                      />
+                    );
+                  })}
                 </Bar>
               </BarChart>
             </ResponsiveContainer>
+          </div>
+          <div style={{ display: 'flex', justifyContent: 'center', gap: '1.5rem', marginTop: '1rem', fontSize: '0.75rem', fontWeight: 600, color: '#64748b' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}><div style={{ width: '12px', height: '12px', background: '#3b82f6', borderRadius: '2px' }}></div> <span>&lt; 24h</span></div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}><div style={{ width: '12px', height: '12px', background: '#f59e0b', borderRadius: '2px' }}></div> <span>24h - 48h</span></div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}><div style={{ width: '12px', height: '12px', background: '#ef4444', borderRadius: '2px' }}></div> <span>&gt; 48h</span></div>
           </div>
         </div>
 

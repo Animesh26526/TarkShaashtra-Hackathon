@@ -14,11 +14,9 @@ def main():
     frontend_dir = os.path.join(base_dir, "frontend")
     
     print("[1/3] Starting Flask Backend on port 5000...")
-    # Using shell=True so it works seamlessly on Windows
     backend_process = subprocess.Popen(
-        [sys.executable, "app.py"],
-        cwd=backend_dir,
-        shell=True
+        ["uv", "run", "python", "app.py"],
+        cwd=backend_dir
     )
     
     time.sleep(3)
@@ -26,11 +24,11 @@ def main():
     node_modules_path = os.path.join(frontend_dir, "node_modules")
     if not os.path.exists(node_modules_path):
         print("Installing frontend dependencies...")
-        subprocess.run(["npm", "install"], cwd=frontend_dir, shell=True)
+        subprocess.run("npm install", cwd=frontend_dir, shell=True)
         
     print("[2/3] Starting Vite Frontend on port 5173...")
     frontend_process = subprocess.Popen(
-        ["npm", "run", "dev"],
+        "npm run dev",
         cwd=frontend_dir,
         shell=True
     )
